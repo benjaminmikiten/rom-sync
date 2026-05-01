@@ -190,7 +190,7 @@ Before any files are touched, the app:
 3. Maps each matched ROM to its destination path via the device's platform mappings.
 4. Computes three lists:
    - **To copy** — matched ROMs not yet present on the SD card (by filename).
-   - **To delete** — files on the SD card not in any resolved playlist.
+   - **To delete** — files present in the device's mapped platform directories (as defined in `rom-sync.yaml`) that are not in any resolved playlist. Only files inside these mapped directories are ever considered for deletion; no other paths on the SD card are touched.
    - **Skipped** — unmatched/unresolved entries (warnings).
 5. Calculates total bytes to copy and queries the SD card's available disk space.
    - If projected post-sync usage exceeds available space: shows a warning with exact numbers and disables "Sync Now" until resolved.
