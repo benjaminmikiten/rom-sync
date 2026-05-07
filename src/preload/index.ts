@@ -25,6 +25,13 @@ contextBridge.exposeInMainWorld('api', {
   listDevices: () => ipcRenderer.invoke('devices:list'),
   readDeviceConfig: (mountPoint: string) => ipcRenderer.invoke('devices:read-config', mountPoint),
 
+  // Utilities
+  openFolderPicker: () => ipcRenderer.invoke('dialog:open-folder'),
+  cleanupDotfiles: () => ipcRenderer.invoke('library:cleanup-dotfiles'),
+  openPlaylistsFolder: () => ipcRenderer.invoke('playlists:open-folder'),
+  createPlaylist: (name: string, platform: string, rawEntries: string) =>
+    ipcRenderer.invoke('playlists:create', name, platform, rawEntries),
+
   // Sync
   previewSync: (mountPoint: string, stems: string[]) => ipcRenderer.invoke('sync:preview', mountPoint, stems),
   executeSync: (mountPoint: string, stems: string[]) => ipcRenderer.invoke('sync:execute', mountPoint, stems),

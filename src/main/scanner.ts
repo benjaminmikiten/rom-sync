@@ -25,6 +25,7 @@ export async function scanLibrary(
     let files: string[]
     try {
       files = readdirSync(platformDir).filter((f) => {
+        if (f.startsWith('.') || f.toLowerCase().endsWith('.txt')) return false
         try {
           return statSync(join(platformDir, f)).isFile()
         } catch {

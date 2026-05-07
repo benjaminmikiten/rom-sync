@@ -19,6 +19,10 @@ declare global {
       previewSync: (mountPoint: string, stems: string[]) => Promise<SyncPreview>
       executeSync: (mountPoint: string, stems: string[]) => Promise<SyncResult>
       onSyncProgress: (cb: (p: SyncProgress) => void) => () => void
+      openFolderPicker: () => Promise<string | null>
+      cleanupDotfiles: () => Promise<{ removed: number }>
+      openPlaylistsFolder: () => Promise<void>
+      createPlaylist: (name: string, platform: string, rawEntries: string) => Promise<{ stem: string }>
     }
   }
 }

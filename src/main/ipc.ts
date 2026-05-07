@@ -1,5 +1,6 @@
-import { ipcMain, app } from 'electron'
+import { ipcMain, app, dialog, shell } from 'electron'
 import { join } from 'path'
+import { readdirSync, unlinkSync, writeFileSync, mkdirSync } from 'fs'
 import type { Database } from './db'
 import { getConfig, setConfig } from './config'
 import { scanLibrary } from './scanner'
@@ -102,6 +103,55 @@ export function registerIpcHandlers(db: Database, mainWindow: BrowserWindow): vo
     return executeSyncPlan(preview, logsDir(), (progress) => {
       mainWindow.webContents.send('sync:progress', progress)
     })
+  })
+
+  // Utilities
+  ipcMain.handle('dialog:open-folder', async () => {
+    const result = await dialog.showOpenDialog(mainWindow, {
+      properties: ['openDirectory']
+    })
+    return result.canceled ? null : result.filePaths[0]
+  })
+
+  ipcMain.handle('library:cleanup-dotfiles', () => {
+    const { libraryPath } = getConfig()
+    let removed = 0
+    try {
+      const platforms = readdirSync(libraryPath)
+      for (const platform of platforms) {
+        const dir = join(libraryPath, platform)
+        try {
+          const files = readdirSync(dir)
+          for (const f of files) {
+            if (f.startsWith('._') || f === '.DS_Store') {
+              try { unlinkSync(join(dir, f)); removed++ } catch { /* skip */ }
+            }
+          }
+        } catch { /* skip unreadable dirs */ }
+      }
+    } catch { /* libraryPath not set/readable */ }
+    return { removed }
+  })
+
+  ipcMain.handle('playlists:open-folder', () => {
+    const dir = playlistsDir()
+    mkdirSync(dir, { recursive: true })
+    shell.openPath(dir)
+  })
+
+  ipcMain.handle('playlists:create', (_e, name: string, platform: string, rawEntries: string) => {
+    const stem = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+    const entries = rawEntries.split('\n').map((l) => l.trim()).filter(Boolean)
+    const lines = [
+      `name: ${name}`,
+      platform ? `platform: ${platform}` : null,
+      'entries:',
+      ...entries.map((e) => `  - ${e}`),
+    ].filter((l): l is string => l !== null)
+    const dir = playlistsDir()
+    mkdirSync(dir, { recursive: true })
+    writeFileSync(join(dir, `${stem}.yaml`), lines.join('\n') + '\n')
+    return { stem }
   })
 
   // Watch playlists dir for changes

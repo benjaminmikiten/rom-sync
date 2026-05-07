@@ -2,12 +2,15 @@ import React, { useEffect, useState, useCallback } from 'react'
 import { api } from '../api'
 import type { Rom } from '@shared/types'
 
+type SortMode = 'alpha' | 'count-desc' | 'count-asc'
+
 export function LibraryView(): React.JSX.Element {
   const [roms, setRoms] = useState<Rom[]>([])
   const [scanning, setScanning] = useState(false)
   const [scanCount, setScanCount] = useState(0)
   const [search, setSearch] = useState('')
   const [lastScanned, setLastScanned] = useState<number | null>(null)
+  const [sort, setSort] = useState<SortMode>('alpha')
 
   const load = useCallback(async () => {
     const all = await api.getRoms()
@@ -42,11 +45,16 @@ export function LibraryView(): React.JSX.Element {
     list.push(rom)
     byPlatform.set(rom.platform, list)
   }
-  const platforms = [...byPlatform.keys()].sort()
+
+  const platforms = [...byPlatform.keys()].sort((a, b) => {
+    if (sort === 'alpha') return a.localeCompare(b)
+    const diff = (byPlatform.get(b)?.length ?? 0) - (byPlatform.get(a)?.length ?? 0)
+    return sort === 'count-desc' ? diff : -diff
+  })
 
   return (
     <div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 24 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 24, flexWrap: 'wrap' }}>
         <h2 style={{ margin: 0 }}>Library</h2>
         <button
           onClick={handleScan} disabled={scanning}
@@ -61,12 +69,23 @@ export function LibraryView(): React.JSX.Element {
         )}
       </div>
 
-      <input
-        type="text" value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        placeholder="Search ROMs…"
-        style={{ width: 300, padding: 8, marginBottom: 20, background: '#2a2a2a', color: '#fff', border: '1px solid #444', borderRadius: 4 }}
-      />
+      <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginBottom: 20 }}>
+        <input
+          type="text" value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search ROMs…"
+          style={{ width: 280, padding: 8, background: '#2a2a2a', color: '#fff', border: '1px solid #444', borderRadius: 4 }}
+        />
+        <select
+          value={sort}
+          onChange={(e) => setSort(e.target.value as SortMode)}
+          style={{ padding: '7px 10px', background: '#2a2a2a', color: '#ccc', border: '1px solid #444', borderRadius: 4, fontSize: 13 }}
+        >
+          <option value="alpha">Sort: A–Z</option>
+          <option value="count-desc">Sort: Most games</option>
+          <option value="count-asc">Sort: Fewest games</option>
+        </select>
+      </div>
 
       <div style={{ fontSize: 13, color: '#888', marginBottom: 16 }}>{roms.length} ROMs indexed</div>
 
