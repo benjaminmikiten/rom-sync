@@ -2,7 +2,7 @@
   "name": "rom-sync",
   "version": "0.1.0",
   "description": "ROM playlist manager and SD card sync tool",
-  "main": "dist/main/index.js",
+  "main": "out/main/index.js",
   "scripts": {
     "dev": "electron-vite dev",
     "build": "electron-vite build",
