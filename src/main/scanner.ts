@@ -44,13 +44,17 @@ export async function scanLibrary(
         // ignore — file may have been removed between listing and stating
       }
 
-      upsertRom(db, {
-        platform,
-        title: normalizeTitle(filename),
-        filename,
-        path,
-        sizeBytes
-      })
+      try {
+        upsertRom(db, {
+          platform,
+          title: normalizeTitle(filename),
+          filename,
+          path,
+          sizeBytes
+        })
+      } catch {
+        // ignore — continue scanning remaining files
+      }
 
       current++
       onProgress({ current, total: null, currentFile: filename })

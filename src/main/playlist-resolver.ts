@@ -35,5 +35,7 @@ export function detectCircularIncludes(
   stem: string,
   allPlaylists: Record<string, Playlist>
 ): string | null {
-  return resolvePlaylist(stem, allPlaylists).error
+  const error = resolvePlaylist(stem, allPlaylists).error
+  if (error && error.startsWith('Circular include detected')) return error
+  return null
 }
