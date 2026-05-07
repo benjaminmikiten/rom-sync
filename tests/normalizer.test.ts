@@ -36,4 +36,9 @@ describe('normalizeTitle', () => {
   it('handles plain string without extension', () => {
     expect(normalizeTitle('Metroid Fusion (USA)')).toBe('metroid fusion')
   })
+
+  it('preserves meaningful parenthetical subtitles', () => {
+    expect(normalizeTitle('The Legend of Zelda (A Link to the Past) (USA).sfc'))
+      .toBe('the legend of zelda a link to the past')
+  })
 })

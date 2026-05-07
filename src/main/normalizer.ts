@@ -1,5 +1,6 @@
 // Parenthetical patterns to strip before general punctuation removal
-const STRIP_PARENS = /\s*\((?:USA|Europe|Japan|World|Rev\s*\w+|v[\d.]+|En|Fr|De|Es|It|Nl|Pt|Sv|No|Da|Fi|Pl|Ru|Zh|Ko|[A-Z]{2,3}(?:,\s*[A-Z]{2,3})*|[^)]*)\)/gi
+// Strip known metadata parens only — no catch-all, so parenthetical subtitles are preserved
+const STRIP_PARENS = /\s*\((?:USA|Europe|Japan|World|Rev\s*\w+|v[\d.]+|En|Fr|De|Es|It|Nl|Pt|Sv|No|Da|Fi|Pl|Ru|Zh|Ko|[A-Z]{2,3}(?:,\s*[A-Z]{2,3})*)\)/gi
 
 export function normalizeTitle(raw: string): string {
   return raw
