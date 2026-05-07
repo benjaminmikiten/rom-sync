@@ -1,16 +1,17 @@
 import initSqlJs from 'sql.js'
-import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'fs'
-import { dirname } from 'path'
+import { existsSync, readFileSync, writeFileSync, renameSync, mkdirSync } from 'fs'
+import { dirname, join } from 'path'
 import type { Database } from 'sql.js'
 import type { Rom } from '@shared/types'
 
 export type { Database }
 
-let _SQL: Awaited<ReturnType<typeof initSqlJs>> | null = null
+// Cache the in-flight Promise so concurrent openDb calls share one WASM init
+let _sqlPromise: ReturnType<typeof initSqlJs> | null = null
 
-async function getSql(): Promise<Awaited<ReturnType<typeof initSqlJs>>> {
-  if (!_SQL) _SQL = await initSqlJs()
-  return _SQL
+function getSql(): ReturnType<typeof initSqlJs> {
+  if (!_sqlPromise) _sqlPromise = initSqlJs()
+  return _sqlPromise
 }
 
 const SCHEMA = `
@@ -44,9 +45,14 @@ export async function openDb(dbPath?: string): Promise<Database> {
 }
 
 export function saveDb(db: Database, dbPath: string): void {
-  mkdirSync(dirname(dbPath), { recursive: true })
+  const dir = dirname(dbPath)
+  mkdirSync(dir, { recursive: true })
   const data = db.export()
-  writeFileSync(dbPath, Buffer.from(data))
+  // Write to a temp file then rename — rename is atomic on POSIX,
+  // preventing a partial write from corrupting the database file.
+  const tmp = join(dir, `.db-write-${process.pid}.tmp`)
+  writeFileSync(tmp, Buffer.from(data))
+  renameSync(tmp, dbPath)
 }
 
 export function upsertRom(db: Database, rom: Omit<Rom, 'id' | 'scannedAt'>): void {
@@ -79,8 +85,8 @@ export function queryRomsByPlatform(db: Database, platform: string): Rom[] {
       title: obj['title'] as string,
       filename: obj['filename'] as string,
       path: obj['path'] as string,
-      sizeBytes: (obj['sizeBytes'] ?? obj['size_bytes']) as number,
-      scannedAt: (obj['scannedAt'] ?? obj['scanned_at']) as number,
+      sizeBytes: obj['sizeBytes'] as number,
+      scannedAt: obj['scannedAt'] as number,
     })
   }
   stmt.free()
@@ -102,8 +108,8 @@ export function queryAllRoms(db: Database): Rom[] {
       title: obj['title'] as string,
       filename: obj['filename'] as string,
       path: obj['path'] as string,
-      sizeBytes: (obj['sizeBytes'] ?? obj['size_bytes']) as number,
-      scannedAt: (obj['scannedAt'] ?? obj['scanned_at']) as number,
+      sizeBytes: obj['sizeBytes'] as number,
+      scannedAt: obj['scannedAt'] as number,
     })
   }
   stmt.free()
