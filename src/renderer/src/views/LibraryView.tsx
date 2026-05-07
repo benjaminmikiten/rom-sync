@@ -32,7 +32,7 @@ export function LibraryView(): React.JSX.Element {
 
   const filtered = roms.filter((r) =>
     search === '' ||
-    r.title.includes(search.toLowerCase()) ||
+    r.title.toLowerCase().includes(search.toLowerCase()) ||
     r.filename.toLowerCase().includes(search.toLowerCase())
   )
 
