@@ -49,9 +49,10 @@ export function registerIpcHandlers(db: Database, mainWindow: BrowserWindow): vo
 
   ipcMain.handle('playlists:match', (_e, stem: string) => {
     const byKey = buildPlaylistMap(playlistsDir())
-    const { entries } = resolvePlaylist(stem, byKey)
+    const result = resolvePlaylist(stem, byKey)
+    if (result.error) return { error: result.error }
     const { fuzzyMatchThreshold } = getConfig()
-    return matchEntries(db, entries, fuzzyMatchThreshold)
+    return matchEntries(db, result.entries, fuzzyMatchThreshold)
   })
 
   // Devices
@@ -61,7 +62,12 @@ export function registerIpcHandlers(db: Database, mainWindow: BrowserWindow): vo
   // Sync
   ipcMain.handle('sync:preview', (_e, mountPoint: string, playlistStems: string[]) => {
     const byKey = buildPlaylistMap(playlistsDir())
-    const allEntries = playlistStems.flatMap((stem) => resolvePlaylist(stem, byKey).entries)
+    const allEntries: import('@shared/types').PlaylistEntry[] = []
+    for (const stem of playlistStems) {
+      const result = resolvePlaylist(stem, byKey)
+      if (result.error) return { error: result.error }
+      allEntries.push(...result.entries)
+    }
     const { fuzzyMatchThreshold } = getConfig()
     const matches: MatchResult[] = matchEntries(db, allEntries, fuzzyMatchThreshold)
 
@@ -79,7 +85,12 @@ export function registerIpcHandlers(db: Database, mainWindow: BrowserWindow): vo
 
   ipcMain.handle('sync:execute', async (_e, mountPoint: string, playlistStems: string[]) => {
     const byKey = buildPlaylistMap(playlistsDir())
-    const allEntries = playlistStems.flatMap((stem) => resolvePlaylist(stem, byKey).entries)
+    const allEntries: import('@shared/types').PlaylistEntry[] = []
+    for (const stem of playlistStems) {
+      const result = resolvePlaylist(stem, byKey)
+      if (result.error) return { error: result.error }
+      allEntries.push(...result.entries)
+    }
     const { fuzzyMatchThreshold } = getConfig()
     const matches: MatchResult[] = matchEntries(db, allEntries, fuzzyMatchThreshold)
 
