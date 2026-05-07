@@ -1,0 +1,26 @@
+import type {
+  AppConfig, Rom, ScanProgress, Playlist, ValidationIssue,
+  MatchResult, MountedVolume, DeviceConfig, SyncPreview, SyncProgress, SyncResult
+} from '@shared/types'
+
+declare global {
+  interface Window {
+    api: {
+      getSettings: () => Promise<AppConfig>
+      setSettings: (patch: Partial<AppConfig>) => Promise<AppConfig>
+      scanLibrary: () => Promise<{ done: boolean }>
+      getRoms: (platform?: string) => Promise<Rom[]>
+      onScanProgress: (cb: (p: ScanProgress) => void) => () => void
+      listPlaylists: () => Promise<Array<{ valid: boolean; playlist: Playlist | null; issues: ValidationIssue[] }>>
+      matchPlaylist: (stem: string) => Promise<MatchResult[]>
+      onPlaylistsChanged: (cb: () => void) => () => void
+      listDevices: () => Promise<MountedVolume[]>
+      readDeviceConfig: (mountPoint: string) => Promise<{ config: DeviceConfig | null; error: string | null }>
+      previewSync: (mountPoint: string, stems: string[]) => Promise<SyncPreview>
+      executeSync: (mountPoint: string, stems: string[]) => Promise<SyncResult>
+      onSyncProgress: (cb: (p: SyncProgress) => void) => () => void
+    }
+  }
+}
+
+export const api = window.api
