@@ -18,14 +18,18 @@ includes:
   - another-playlist-stem   # optional: merge entries from another playlist
 \`\`\`
 
-Cross-platform playlist:
+Cross-platform playlist (omit top-level platform; entries is a platform-keyed map):
 \`\`\`yaml
 name: All-Time Favorites
 entries:
-  - raw: Chrono Trigger
-    platform: snes
-  - raw: Castlevania - Aria of Sorrow
-    platform: gba
+  snes:
+    - Chrono Trigger
+    - Super Metroid
+  gba:
+    - Castlevania - Aria of Sorrow
+    - Metroid Fusion
+  nds:
+    - Castlevania - Dawn of Sorrow
 \`\`\`
 
 ## Rules
