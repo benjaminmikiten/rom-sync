@@ -9,6 +9,7 @@ interface DeviceDetail {
 }
 
 interface PlatformRow {
+  id: number
   platform: string
   path: string
 }
@@ -23,8 +24,9 @@ export function DevicesView(): React.JSX.Element {
   const [loading, setLoading] = useState(false)
 
   // Setup form state
+  const nextRowId = React.useRef(1)
   const [deviceName, setDeviceName] = useState('')
-  const [platformRows, setPlatformRows] = useState<PlatformRow[]>([{ platform: '', path: '' }])
+  const [platformRows, setPlatformRows] = useState<PlatformRow[]>([{ id: 0, platform: '', path: '' }])
   const [createError, setCreateError] = useState<string | null>(null)
   const [creating, setCreating] = useState(false)
 
@@ -36,13 +38,14 @@ export function DevicesView(): React.JSX.Element {
     setSelected({ volume: vol, config, configError: error })
     // Pre-fill device name for the setup form
     setDeviceName(vol.name)
-    setPlatformRows([{ platform: '', path: '' }])
+    setPlatformRows([{ id: nextRowId.current++, platform: '', path: '' }])
     setCreateError(null)
     setLoading(false)
   }
 
   function handleAddRow(): void {
-    setPlatformRows((rows) => [...rows, { platform: '', path: '' }])
+    const id = nextRowId.current++
+    setPlatformRows((rows) => [...rows, { id, platform: '', path: '' }])
   }
 
   function handleRemoveRow(index: number): void {
@@ -122,7 +125,7 @@ export function DevicesView(): React.JSX.Element {
             <div style={{ marginBottom: 16 }}>
               <label style={{ display: 'block', marginBottom: 8, color: '#ccc', fontSize: 13 }}>Platform Paths</label>
               {platformRows.map((row, i) => (
-                <div key={i} style={{ display: 'flex', gap: 8, marginBottom: 8, alignItems: 'center' }}>
+                <div key={row.id} style={{ display: 'flex', gap: 8, marginBottom: 8, alignItems: 'center' }}>
                   <input
                     type="text"
                     value={row.platform}

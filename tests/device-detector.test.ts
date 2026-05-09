@@ -65,4 +65,9 @@ describe('writeDeviceConfig', () => {
     })
     expect(result.error).not.toBeNull()
   })
+
+  it('returns an error when deviceName is empty', () => {
+    const result = writeDeviceConfig(dir, { deviceName: '', platforms: { gba: '/Roms/GBA' } })
+    expect(result.error).not.toBeNull()
+  })
 })

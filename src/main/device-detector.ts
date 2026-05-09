@@ -50,6 +50,9 @@ export function writeDeviceConfig(
   mountPoint: string,
   config: DeviceConfig
 ): { error: string | null } {
+  if (!config.deviceName.trim()) {
+    return { error: 'device_name must not be empty' }
+  }
   const configPath = join(mountPoint, 'rom-sync.yaml')
   try {
     const content = yaml.dump({
