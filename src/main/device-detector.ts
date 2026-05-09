@@ -1,4 +1,4 @@
-import { existsSync, readFileSync, readdirSync, statSync } from 'fs'
+import { existsSync, readFileSync, readdirSync, statSync, writeFileSync } from 'fs'
 import { join } from 'path'
 import { execFileSync } from 'child_process'
 import yaml from 'js-yaml'
@@ -43,6 +43,23 @@ export function readDeviceConfig(mountPoint: string): DeviceConfigResult {
       platforms: doc['platforms'] as Record<string, string>
     },
     error: null
+  }
+}
+
+export function writeDeviceConfig(
+  mountPoint: string,
+  config: DeviceConfig
+): { error: string | null } {
+  const configPath = join(mountPoint, 'rom-sync.yaml')
+  try {
+    const content = yaml.dump({
+      device_name: config.deviceName,
+      platforms: config.platforms
+    })
+    writeFileSync(configPath, content, 'utf-8')
+    return { error: null }
+  } catch (e: unknown) {
+    return { error: e instanceof Error ? e.message : String(e) }
   }
 }
 

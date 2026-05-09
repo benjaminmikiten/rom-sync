@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
-import { readDeviceConfig } from '../src/main/device-detector'
+import { readDeviceConfig, writeDeviceConfig } from '../src/main/device-detector'
 import { mkdtempSync, writeFileSync, rmSync } from 'fs'
 import { tmpdir } from 'os'
 import { join } from 'path'
@@ -40,6 +40,29 @@ platforms:
     writeFileSync(join(dir, 'rom-sync.yaml'), `device_name: [broken`)
     const result = readDeviceConfig(dir)
     expect(result.config).toBeNull()
+    expect(result.error).not.toBeNull()
+  })
+})
+
+describe('writeDeviceConfig', () => {
+  it('writes a valid rom-sync.yaml that readDeviceConfig can read back', () => {
+    const config = {
+      deviceName: 'My Card',
+      platforms: { gba: '/Roms/GBA', snes: '/Roms/SNES' }
+    }
+    const result = writeDeviceConfig(dir, config)
+    expect(result.error).toBeNull()
+
+    const readBack = readDeviceConfig(dir)
+    expect(readBack.error).toBeNull()
+    expect(readBack.config).toEqual(config)
+  })
+
+  it('returns an error when the mount point does not exist', () => {
+    const result = writeDeviceConfig('/nonexistent/path/xyz', {
+      deviceName: 'Test',
+      platforms: { gba: '/Roms/GBA' }
+    })
     expect(result.error).not.toBeNull()
   })
 })

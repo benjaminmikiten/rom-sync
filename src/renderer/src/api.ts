@@ -16,6 +16,7 @@ declare global {
       onPlaylistsChanged: (cb: () => void) => () => void
       listDevices: () => Promise<MountedVolume[]>
       readDeviceConfig: (mountPoint: string) => Promise<{ config: DeviceConfig | null; error: string | null }>
+      writeDeviceConfig: (mountPoint: string, config: DeviceConfig) => Promise<{ error: string | null }>
       previewSync: (mountPoint: string, stems: string[]) => Promise<SyncPreview>
       executeSync: (mountPoint: string, stems: string[]) => Promise<SyncResult>
       onSyncProgress: (cb: (p: SyncProgress) => void) => () => void
