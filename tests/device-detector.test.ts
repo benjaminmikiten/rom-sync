@@ -78,6 +78,7 @@ describe('listSubdirs', () => {
     mkdirSync(join(dir, 'SNES'))
     writeFileSync(join(dir, 'not-a-dir.txt'), '')
     const result = listSubdirs(dir)
+    expect(result).toHaveLength(2)
     expect(result).toContain('GBA')
     expect(result).toContain('SNES')
     expect(result).not.toContain('not-a-dir.txt')
