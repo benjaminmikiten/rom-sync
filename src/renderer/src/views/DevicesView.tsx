@@ -11,11 +11,15 @@ interface DeviceDetail {
 interface PlatformRow {
   id: number
   platform: string
-  path: string
+  path: string | null   // full Mac path; null = derive from romsRoot + platform at submit
 }
 
 function fmt(bytes: number): string {
   return `${(bytes / 1_073_741_824).toFixed(1)} GB`
+}
+
+function toYamlPath(fullPath: string, mountPoint: string): string {
+  return fullPath.startsWith(mountPoint) ? fullPath.slice(mountPoint.length) : fullPath
 }
 
 export function DevicesView(): React.JSX.Element {
@@ -23,10 +27,10 @@ export function DevicesView(): React.JSX.Element {
   const [selected, setSelected] = useState<DeviceDetail | null>(null)
   const [loading, setLoading] = useState(false)
 
-  // Setup form state
   const nextRowId = React.useRef(1)
   const [deviceName, setDeviceName] = useState('')
-  const [platformRows, setPlatformRows] = useState<PlatformRow[]>([{ id: 0, platform: '', path: '' }])
+  const [romsRoot, setRomsRoot] = useState<string | null>(null)
+  const [platformRows, setPlatformRows] = useState<PlatformRow[]>([{ id: 0, platform: '', path: null }])
   const [createError, setCreateError] = useState<string | null>(null)
   const [creating, setCreating] = useState(false)
 
@@ -36,37 +40,63 @@ export function DevicesView(): React.JSX.Element {
     setLoading(true)
     const { config, error } = await api.readDeviceConfig(vol.mountPoint)
     setSelected({ volume: vol, config, configError: error })
-    // Pre-fill device name for the setup form
     setDeviceName(vol.name)
-    setPlatformRows([{ id: nextRowId.current++, platform: '', path: '' }])
+    setRomsRoot(null)
+    setPlatformRows([{ id: nextRowId.current++, platform: '', path: null }])
     setCreateError(null)
     setLoading(false)
   }
 
+  async function handlePickRoot(): Promise<void> {
+    const picked = await api.openFolderPicker()
+    if (!picked) return
+    setRomsRoot(picked)
+    const subdirs = await api.listSubdirs(picked)
+    if (subdirs.length > 0) {
+      setPlatformRows(subdirs.map((name) => ({
+        id: nextRowId.current++,
+        platform: name.toLowerCase(),
+        path: `${picked}/${name}`
+      })))
+    } else {
+      setPlatformRows([{ id: nextRowId.current++, platform: '', path: null }])
+    }
+  }
+
+  async function handleChangeRowFolder(index: number): Promise<void> {
+    const picked = await api.openFolderPicker()
+    if (!picked) return
+    setPlatformRows((rows) => rows.map((r, i) => i === index ? { ...r, path: picked } : r))
+  }
+
   function handleAddRow(): void {
-    const id = nextRowId.current++
-    setPlatformRows((rows) => [...rows, { id, platform: '', path: '' }])
+    setPlatformRows((rows) => [...rows, { id: nextRowId.current++, platform: '', path: null }])
   }
 
   function handleRemoveRow(index: number): void {
     setPlatformRows((rows) => rows.filter((_, i) => i !== index))
   }
 
-  function handleRowChange(index: number, field: 'platform' | 'path', value: string): void {
-    setPlatformRows((rows) => rows.map((r, i) => i === index ? { ...r, [field]: value } : r))
+  function handlePlatformChange(index: number, value: string): void {
+    setPlatformRows((rows) => rows.map((r, i) => i === index ? { ...r, platform: value } : r))
   }
 
   async function handleCreate(): Promise<void> {
     if (!selected) return
+    const mountPoint = selected.volume.mountPoint
     const platforms: Record<string, string> = {}
     for (const row of platformRows) {
-      if (row.platform.trim() && row.path.trim()) {
-        platforms[row.platform.trim()] = row.path.trim()
+      const code = row.platform.trim()
+      if (!code) continue
+      if (row.path) {
+        platforms[code] = toYamlPath(row.path, mountPoint)
+      } else if (romsRoot) {
+        platforms[code] = toYamlPath(`${romsRoot}/${code}`, mountPoint)
       }
     }
     setCreating(true)
     setCreateError(null)
-    const result = await api.writeDeviceConfig(selected.volume.mountPoint, {
+    const result = await api.writeDeviceConfig(mountPoint, {
       deviceName: deviceName.trim(),
       platforms
     })
@@ -75,20 +105,23 @@ export function DevicesView(): React.JSX.Element {
       setCreating(false)
       return
     }
-    // Reload config
-    const { config, error } = await api.readDeviceConfig(selected.volume.mountPoint)
+    const { config, error } = await api.readDeviceConfig(mountPoint)
     setSelected({ volume: selected.volume, config, configError: error })
     setCreating(false)
   }
 
   const canCreate =
+    selected !== null &&
     deviceName.trim().length > 0 &&
-    platformRows.some((r) => r.platform.trim() && r.path.trim())
+    platformRows.some((r) =>
+      r.platform.trim().length > 0 && (r.path !== null || romsRoot !== null)
+    )
 
   if (selected) {
     const isMissingConfig =
       selected.config === null &&
       selected.configError === 'rom-sync.yaml not found on this volume'
+    const mountPoint = selected.volume.mountPoint
 
     return (
       <div>
@@ -97,14 +130,12 @@ export function DevicesView(): React.JSX.Element {
           <h2 style={{ margin: 0 }}>{selected.volume.name}</h2>
         </div>
 
-        {/* Non-missing-file errors */}
         {selected.configError && !isMissingConfig && (
           <div style={{ padding: 12, background: '#f4433622', border: '1px solid #f44336', borderRadius: 6, marginBottom: 16, color: '#f44336' }}>
             {selected.configError}
           </div>
         )}
 
-        {/* Setup form — shown when rom-sync.yaml is missing */}
         {isMissingConfig && (
           <div>
             <p style={{ color: '#888', marginBottom: 20, fontSize: 13 }}>
@@ -123,32 +154,67 @@ export function DevicesView(): React.JSX.Element {
             </div>
 
             <div style={{ marginBottom: 16 }}>
-              <label style={{ display: 'block', marginBottom: 8, color: '#ccc', fontSize: 13 }}>Platform Paths</label>
-              {platformRows.map((row, i) => (
-                <div key={row.id} style={{ display: 'flex', gap: 8, marginBottom: 8, alignItems: 'center' }}>
-                  <input
-                    type="text"
-                    value={row.platform}
-                    onChange={(e) => handleRowChange(i, 'platform', e.target.value)}
-                    placeholder="gba"
-                    style={{ width: 80, padding: '6px 8px', background: '#2a2a2a', color: '#fff', border: '1px solid #444', borderRadius: 4, fontSize: 13 }}
-                  />
-                  <span style={{ color: '#555' }}>→</span>
-                  <input
-                    type="text"
-                    value={row.path}
-                    onChange={(e) => handleRowChange(i, 'path', e.target.value)}
-                    placeholder="/Roms/GBA"
-                    style={{ width: 200, padding: '6px 8px', background: '#2a2a2a', color: '#fff', border: '1px solid #444', borderRadius: 4, fontSize: 13 }}
-                  />
-                  {platformRows.length > 1 && (
+              <label style={{ display: 'block', marginBottom: 6, color: '#ccc', fontSize: 13 }}>ROMs Root Folder</label>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                {romsRoot ? (
+                  <>
+                    <span style={{ fontSize: 13, color: '#aaa' }}>{toYamlPath(romsRoot, mountPoint)}</span>
                     <button
-                      onClick={() => handleRemoveRow(i)}
-                      style={{ background: 'none', border: 'none', color: '#666', cursor: 'pointer', fontSize: 16, lineHeight: 1 }}
-                    >×</button>
-                  )}
-                </div>
-              ))}
+                      onClick={handlePickRoot}
+                      style={{ padding: '4px 10px', background: '#2a2a2a', color: '#aaa', border: '1px solid #444', borderRadius: 4, cursor: 'pointer', fontSize: 12 }}
+                    >Change</button>
+                  </>
+                ) : (
+                  <button
+                    onClick={handlePickRoot}
+                    style={{ padding: '7px 14px', background: '#3a3a3a', color: '#ccc', border: '1px solid #555', borderRadius: 4, cursor: 'pointer' }}
+                  >Pick Folder…</button>
+                )}
+              </div>
+            </div>
+
+            <div style={{ marginBottom: 16 }}>
+              <label style={{ display: 'block', marginBottom: 8, color: '#ccc', fontSize: 13 }}>Platforms</label>
+              {platformRows.map((row, i) => {
+                const previewPath = row.path
+                  ? toYamlPath(row.path, mountPoint)
+                  : romsRoot && row.platform.trim()
+                    ? toYamlPath(`${romsRoot}/${row.platform.trim()}`, mountPoint)
+                    : null
+
+                return (
+                  <div key={row.id} style={{ display: 'flex', gap: 8, marginBottom: 8, alignItems: 'center' }}>
+                    <input
+                      type="text"
+                      value={row.platform}
+                      onChange={(e) => handlePlatformChange(i, e.target.value)}
+                      placeholder="gba"
+                      style={{ width: 80, padding: '6px 8px', background: '#2a2a2a', color: '#fff', border: '1px solid #444', borderRadius: 4, fontSize: 13 }}
+                    />
+                    <span style={{ color: '#555' }}>→</span>
+                    <span style={{
+                      fontSize: 13,
+                      color: row.path ? '#aaa' : '#555',
+                      minWidth: 180,
+                      fontStyle: row.path ? 'normal' : 'italic'
+                    }}>
+                      {previewPath ?? '(pick a folder)'}
+                    </span>
+                    <button
+                      onClick={() => handleChangeRowFolder(i)}
+                      style={{ padding: '4px 10px', background: '#2a2a2a', color: '#aaa', border: '1px solid #444', borderRadius: 4, cursor: 'pointer', fontSize: 12 }}
+                    >
+                      {row.path ? 'Change' : 'Pick…'}
+                    </button>
+                    {platformRows.length > 1 && (
+                      <button
+                        onClick={() => handleRemoveRow(i)}
+                        style={{ background: 'none', border: 'none', color: '#666', cursor: 'pointer', fontSize: 16, lineHeight: 1 }}
+                      >×</button>
+                    )}
+                  </div>
+                )
+              })}
               <button
                 onClick={handleAddRow}
                 style={{ marginTop: 4, padding: '4px 12px', background: '#2a2a2a', color: '#aaa', border: '1px solid #444', borderRadius: 4, cursor: 'pointer', fontSize: 12 }}
@@ -177,7 +243,6 @@ export function DevicesView(): React.JSX.Element {
           </div>
         )}
 
-        {/* Normal config detail */}
         {selected.config && (
           <div>
             <p><strong>Device Name:</strong> {selected.config.deviceName}</p>
