@@ -63,10 +63,10 @@ export function DevicesView(): React.JSX.Element {
     }
   }
 
-  async function handleChangeRowFolder(index: number): Promise<void> {
+  async function handleChangeRowFolder(rowId: number): Promise<void> {
     const picked = await api.openFolderPicker()
     if (!picked) return
-    setPlatformRows((rows) => rows.map((r, i) => i === index ? { ...r, path: picked } : r))
+    setPlatformRows((rows) => rows.map((r) => r.id === rowId ? { ...r, path: picked } : r))
   }
 
   function handleAddRow(): void {
@@ -77,23 +77,26 @@ export function DevicesView(): React.JSX.Element {
     setPlatformRows((rows) => rows.filter((_, i) => i !== index))
   }
 
-  function handlePlatformChange(index: number, value: string): void {
-    setPlatformRows((rows) => rows.map((r, i) => i === index ? { ...r, platform: value } : r))
+  function handlePlatformChange(rowId: number, value: string): void {
+    setPlatformRows((rows) => rows.map((r) => r.id === rowId ? { ...r, platform: value } : r))
   }
 
   async function handleCreate(): Promise<void> {
     if (!selected) return
     const mountPoint = selected.volume.mountPoint
     const platforms: Record<string, string> = {}
+    const seen = new Set<string>()
     for (const row of platformRows) {
       const code = row.platform.trim()
-      if (!code) continue
+      if (!code || seen.has(code)) continue
+      seen.add(code)
       if (row.path) {
         platforms[code] = toYamlPath(row.path, mountPoint)
       } else if (romsRoot) {
         platforms[code] = toYamlPath(`${romsRoot}/${code}`, mountPoint)
       }
     }
+    if (Object.keys(platforms).length === 0) return
     setCreating(true)
     setCreateError(null)
     const result = await api.writeDeviceConfig(mountPoint, {
@@ -187,7 +190,7 @@ export function DevicesView(): React.JSX.Element {
                     <input
                       type="text"
                       value={row.platform}
-                      onChange={(e) => handlePlatformChange(i, e.target.value)}
+                      onChange={(e) => handlePlatformChange(row.id, e.target.value)}
                       placeholder="gba"
                       style={{ width: 80, padding: '6px 8px', background: '#2a2a2a', color: '#fff', border: '1px solid #444', borderRadius: 4, fontSize: 13 }}
                     />
@@ -201,7 +204,7 @@ export function DevicesView(): React.JSX.Element {
                       {previewPath ?? '(pick a folder)'}
                     </span>
                     <button
-                      onClick={() => handleChangeRowFolder(i)}
+                      onClick={() => handleChangeRowFolder(row.id)}
                       style={{ padding: '4px 10px', background: '#2a2a2a', color: '#aaa', border: '1px solid #444', borderRadius: 4, cursor: 'pointer', fontSize: 12 }}
                     >
                       {row.path ? 'Change' : 'Pick…'}
