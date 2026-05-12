@@ -26,6 +26,7 @@ contextBridge.exposeInMainWorld('api', {
   readDeviceConfig: (mountPoint: string) => ipcRenderer.invoke('devices:read-config', mountPoint),
   writeDeviceConfig: (mountPoint: string, config: import('@shared/types').DeviceConfig) =>
     ipcRenderer.invoke('devices:write-config', mountPoint, config),
+  listSubdirs: (path: string) => ipcRenderer.invoke('devices:list-subdirs', path),
 
   // Utilities
   openFolderPicker: () => ipcRenderer.invoke('dialog:open-folder'),

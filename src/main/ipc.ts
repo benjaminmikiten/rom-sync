@@ -7,7 +7,7 @@ import { scanLibrary } from './scanner'
 import { loadAllPlaylists } from './playlist-loader'
 import { resolvePlaylist } from './playlist-resolver'
 import { matchEntries } from './matcher'
-import { listMountedVolumes, readDeviceConfig, writeDeviceConfig } from './device-detector'
+import { listMountedVolumes, readDeviceConfig, writeDeviceConfig, listSubdirs } from './device-detector'
 import { computeSyncPreview } from './sync-previewer'
 import { executeSyncPlan } from './sync-executor'
 import { queryRomsByPlatform, queryAllRoms } from './db'
@@ -62,6 +62,7 @@ export function registerIpcHandlers(db: Database, mainWindow: BrowserWindow): vo
   ipcMain.handle('devices:write-config', (_e, mountPoint: string, config: import('@shared/types').DeviceConfig) =>
     writeDeviceConfig(mountPoint, config)
   )
+  ipcMain.handle('devices:list-subdirs', (_e, path: string) => listSubdirs(path))
 
   // Sync
   ipcMain.handle('sync:preview', (_e, mountPoint: string, playlistStems: string[]) => {

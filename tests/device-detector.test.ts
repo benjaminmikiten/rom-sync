@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
-import { readDeviceConfig, writeDeviceConfig } from '../src/main/device-detector'
-import { mkdtempSync, writeFileSync, rmSync } from 'fs'
+import { readDeviceConfig, writeDeviceConfig, listSubdirs } from '../src/main/device-detector'
+import { mkdtempSync, writeFileSync, rmSync, mkdirSync } from 'fs'
 import { tmpdir } from 'os'
 import { join } from 'path'
 
@@ -69,5 +69,25 @@ describe('writeDeviceConfig', () => {
   it('returns an error when deviceName is empty', () => {
     const result = writeDeviceConfig(dir, { deviceName: '', platforms: { gba: '/Roms/GBA' } })
     expect(result.error).not.toBeNull()
+  })
+})
+
+describe('listSubdirs', () => {
+  it('returns names of immediate subdirectories', () => {
+    mkdirSync(join(dir, 'GBA'))
+    mkdirSync(join(dir, 'SNES'))
+    writeFileSync(join(dir, 'not-a-dir.txt'), '')
+    const result = listSubdirs(dir)
+    expect(result).toContain('GBA')
+    expect(result).toContain('SNES')
+    expect(result).not.toContain('not-a-dir.txt')
+  })
+
+  it('returns empty array for nonexistent path', () => {
+    expect(listSubdirs('/nonexistent/path/xyz')).toEqual([])
+  })
+
+  it('returns empty array for empty directory', () => {
+    expect(listSubdirs(dir)).toEqual([])
   })
 })

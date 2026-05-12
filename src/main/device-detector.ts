@@ -92,3 +92,17 @@ export function listMountedVolumes(): MountedVolume[] {
     return []
   }
 }
+
+export function listSubdirs(path: string): string[] {
+  try {
+    return readdirSync(path).filter((name) => {
+      try {
+        return statSync(join(path, name)).isDirectory()
+      } catch {
+        return false
+      }
+    })
+  } catch {
+    return []
+  }
+}
