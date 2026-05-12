@@ -73,8 +73,8 @@ export function DevicesView(): React.JSX.Element {
     setPlatformRows((rows) => [...rows, { id: nextRowId.current++, platform: '', path: null }])
   }
 
-  function handleRemoveRow(index: number): void {
-    setPlatformRows((rows) => rows.filter((_, i) => i !== index))
+  function handleRemoveRow(rowId: number): void {
+    setPlatformRows((rows) => rows.filter((r) => r.id !== rowId))
   }
 
   function handlePlatformChange(rowId: number, value: string): void {
@@ -211,7 +211,7 @@ export function DevicesView(): React.JSX.Element {
                     </button>
                     {platformRows.length > 1 && (
                       <button
-                        onClick={() => handleRemoveRow(i)}
+                        onClick={() => handleRemoveRow(row.id)}
                         style={{ background: 'none', border: 'none', color: '#666', cursor: 'pointer', fontSize: 16, lineHeight: 1 }}
                       >×</button>
                     )}
