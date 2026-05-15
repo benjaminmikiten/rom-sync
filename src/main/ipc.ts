@@ -102,6 +102,7 @@ export function registerIpcHandlers(db: Database, mainWindow: BrowserWindow): vo
     const { fuzzyMatchThreshold } = getConfig()
     const matches: MatchResult[] = matchEntries(db, allEntries, fuzzyMatchThreshold)
 
+    // Re-read config before execution to pick up any changes made since preview
     const { config: freshConfig } = readDeviceConfig(mountPoint)
     const preview = computeSyncPreview(matches, freshConfig ?? deviceConfig, mountPoint)
 
