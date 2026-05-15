@@ -23,7 +23,7 @@ export function SyncView(): React.JSX.Element {
     setPreviewLoading(true)
     setPreview(null)
     setPreviewError(null)
-    const p = await api.previewSync(selectedVolume) as SyncPreview | { error: string }
+    const p = await api.previewSync(selectedVolume)
     if ('error' in p) {
       setPreviewError(p.error)
     } else {

@@ -110,7 +110,8 @@ export function DevicesView(): React.JSX.Element {
     setCreateError(null)
     const result = await api.writeDeviceConfig(mountPoint, {
       deviceName: deviceName.trim(),
-      platforms
+      platforms,
+      playlists: []
     })
     if (result.error) {
       setCreateError(result.error)
