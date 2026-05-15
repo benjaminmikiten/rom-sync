@@ -65,19 +65,19 @@ export function registerIpcHandlers(db: Database, mainWindow: BrowserWindow): vo
   ipcMain.handle('devices:list-subdirs', (_e, path: string) => listSubdirs(path))
 
   // Sync
-  ipcMain.handle('sync:preview', (_e, mountPoint: string, playlistStems: string[]) => {
+  ipcMain.handle('sync:preview', (_e, mountPoint: string) => {
+    const { config: deviceConfig, error } = readDeviceConfig(mountPoint)
+    if (!deviceConfig) return { error: error ?? 'Could not read device config' }
+
     const byKey = buildPlaylistMap(playlistsDir())
     const allEntries: import('@shared/types').PlaylistEntry[] = []
-    for (const stem of playlistStems) {
+    for (const stem of deviceConfig.playlists) {
       const result = resolvePlaylist(stem, byKey)
       if (result.error) return { error: result.error }
       allEntries.push(...result.entries)
     }
     const { fuzzyMatchThreshold } = getConfig()
     const matches: MatchResult[] = matchEntries(db, allEntries, fuzzyMatchThreshold)
-
-    const { config: deviceConfig, error } = readDeviceConfig(mountPoint)
-    if (!deviceConfig) return { error: error ?? 'Could not read device config' }
 
     const preview = computeSyncPreview(matches, deviceConfig, mountPoint)
 
@@ -88,10 +88,13 @@ export function registerIpcHandlers(db: Database, mainWindow: BrowserWindow): vo
     return preview
   })
 
-  ipcMain.handle('sync:execute', async (_e, mountPoint: string, playlistStems: string[]) => {
+  ipcMain.handle('sync:execute', async (_e, mountPoint: string) => {
+    const { config: deviceConfig, error } = readDeviceConfig(mountPoint)
+    if (!deviceConfig) return { error: error ?? 'Could not read device config' }
+
     const byKey = buildPlaylistMap(playlistsDir())
     const allEntries: import('@shared/types').PlaylistEntry[] = []
-    for (const stem of playlistStems) {
+    for (const stem of deviceConfig.playlists) {
       const result = resolvePlaylist(stem, byKey)
       if (result.error) return { error: result.error }
       allEntries.push(...result.entries)
@@ -99,10 +102,8 @@ export function registerIpcHandlers(db: Database, mainWindow: BrowserWindow): vo
     const { fuzzyMatchThreshold } = getConfig()
     const matches: MatchResult[] = matchEntries(db, allEntries, fuzzyMatchThreshold)
 
-    const { config: deviceConfig, error } = readDeviceConfig(mountPoint)
-    if (!deviceConfig) return { error: error ?? 'Could not read device config' }
-
-    const preview = computeSyncPreview(matches, deviceConfig, mountPoint)
+    const { config: freshConfig } = readDeviceConfig(mountPoint)
+    const preview = computeSyncPreview(matches, freshConfig ?? deviceConfig, mountPoint)
 
     return executeSyncPlan(preview, logsDir(), (progress) => {
       mainWindow.webContents.send('sync:progress', progress)
