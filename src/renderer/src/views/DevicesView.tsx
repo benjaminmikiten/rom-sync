@@ -33,6 +33,8 @@ export function DevicesView(): React.JSX.Element {
   const [platformRows, setPlatformRows] = useState<PlatformRow[]>([{ id: 0, platform: '', path: null }])
   const [createError, setCreateError] = useState<string | null>(null)
   const [creating, setCreating] = useState(false)
+  const [availablePlaylists, setAvailablePlaylists] = useState<Array<{ stem: string; name: string }>>([])
+  const [playlistSaveError, setPlaylistSaveError] = useState<string | null>(null)
 
   useEffect(() => { api.listDevices().then(setVolumes) }, [])
 
@@ -44,6 +46,13 @@ export function DevicesView(): React.JSX.Element {
     setRomsRoot(null)
     setPlatformRows([{ id: nextRowId.current++, platform: '', path: null }])
     setCreateError(null)
+    setPlaylistSaveError(null)
+    const plResults = await api.listPlaylists()
+    setAvailablePlaylists(
+      plResults
+        .filter((r) => r.playlist !== null)
+        .map((r) => ({ stem: r.playlist!.stem, name: r.playlist!.name }))
+    )
     setLoading(false)
   }
 
@@ -111,6 +120,26 @@ export function DevicesView(): React.JSX.Element {
     const { config, error } = await api.readDeviceConfig(mountPoint)
     setSelected({ volume: selected.volume, config, configError: error })
     setCreating(false)
+  }
+
+  async function handleTogglePlaylist(stem: string): Promise<void> {
+    if (!selected?.config) return
+    const current = selected.config.playlists
+    const updated = current.includes(stem)
+      ? current.filter((s) => s !== stem)
+      : [...current, stem]
+    const result = await api.writeDeviceConfig(selected.volume.mountPoint, {
+      ...selected.config,
+      playlists: updated
+    })
+    if (result.error) {
+      setPlaylistSaveError(result.error)
+      return
+    }
+    setPlaylistSaveError(null)
+    setSelected((prev) =>
+      prev ? { ...prev, config: prev.config ? { ...prev.config, playlists: updated } : null } : null
+    )
   }
 
   const canCreate =
@@ -267,6 +296,27 @@ export function DevicesView(): React.JSX.Element {
                 ))}
               </tbody>
             </table>
+
+            <div style={{ marginTop: 24 }}>
+              <h3 style={{ margin: '0 0 12px' }}>Playlists</h3>
+              {availablePlaylists.length === 0 ? (
+                <p style={{ color: '#666', fontSize: 13 }}>No playlists yet — create some in the Playlists tab.</p>
+              ) : (
+                availablePlaylists.map(({ stem, name }) => (
+                  <label key={stem} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, cursor: 'pointer' }}>
+                    <input
+                      type="checkbox"
+                      checked={selected.config!.playlists.includes(stem)}
+                      onChange={() => handleTogglePlaylist(stem)}
+                    />
+                    <span style={{ fontSize: 13 }}>{name}</span>
+                  </label>
+                ))
+              )}
+              {playlistSaveError && (
+                <div style={{ color: '#f44336', fontSize: 13, marginTop: 8 }}>{playlistSaveError}</div>
+              )}
+            </div>
           </div>
         )}
       </div>
