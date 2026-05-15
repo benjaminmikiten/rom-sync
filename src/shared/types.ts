@@ -64,6 +64,7 @@ export interface MatchResult {
 export interface DeviceConfig {
   deviceName: string
   platforms: Record<string, string>  // platform -> path on card
+  playlists: string[]                // playlist stems assigned to this device
 }
 
 export interface MountedVolume {

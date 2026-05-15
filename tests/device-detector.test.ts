@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { readDeviceConfig, writeDeviceConfig, listSubdirs } from '../src/main/device-detector'
-import { mkdtempSync, writeFileSync, rmSync, mkdirSync } from 'fs'
+import { mkdtempSync, writeFileSync, readFileSync, rmSync, mkdirSync } from 'fs'
 import { tmpdir } from 'os'
 import { join } from 'path'
 
@@ -20,7 +20,42 @@ platforms:
     expect(result.config).not.toBeNull()
     expect(result.config!.deviceName).toBe('MiSTer FPGA')
     expect(result.config!.platforms['gba']).toBe('/games/gba')
+    expect(result.config!.playlists).toEqual([])
     expect(result.error).toBeNull()
+  })
+
+  it('parses playlists field when present', () => {
+    writeFileSync(join(dir, 'rom-sync.yaml'), `
+device_name: My Card
+platforms:
+  gba: /Roms/GBA
+playlists:
+  - gba-favorites
+  - snes-classics
+`)
+    const result = readDeviceConfig(dir)
+    expect(result.config!.playlists).toEqual(['gba-favorites', 'snes-classics'])
+  })
+
+  it('defaults playlists to [] when key is absent', () => {
+    writeFileSync(join(dir, 'rom-sync.yaml'), `
+device_name: My Card
+platforms:
+  gba: /Roms/GBA
+`)
+    const result = readDeviceConfig(dir)
+    expect(result.config!.playlists).toEqual([])
+  })
+
+  it('defaults playlists to [] when value is not an array', () => {
+    writeFileSync(join(dir, 'rom-sync.yaml'), `
+device_name: My Card
+platforms:
+  gba: /Roms/GBA
+playlists: not-an-array
+`)
+    const result = readDeviceConfig(dir)
+    expect(result.config!.playlists).toEqual([])
   })
 
   it('returns error when rom-sync.yaml is missing', () => {
@@ -48,7 +83,8 @@ describe('writeDeviceConfig', () => {
   it('writes a valid rom-sync.yaml that readDeviceConfig can read back', () => {
     const config = {
       deviceName: 'My Card',
-      platforms: { gba: '/Roms/GBA', snes: '/Roms/SNES' }
+      platforms: { gba: '/Roms/GBA', snes: '/Roms/SNES' },
+      playlists: []
     }
     const result = writeDeviceConfig(dir, config)
     expect(result.error).toBeNull()
@@ -58,16 +94,34 @@ describe('writeDeviceConfig', () => {
     expect(readBack.config).toEqual(config)
   })
 
+  it('round-trips playlists correctly', () => {
+    const config = {
+      deviceName: 'My Card',
+      platforms: { gba: '/Roms/GBA' },
+      playlists: ['gba-favorites', 'all-gba']
+    }
+    writeDeviceConfig(dir, config)
+    const readBack = readDeviceConfig(dir)
+    expect(readBack.config!.playlists).toEqual(['gba-favorites', 'all-gba'])
+  })
+
+  it('omits playlists key when list is empty', () => {
+    writeDeviceConfig(dir, { deviceName: 'My Card', platforms: { gba: '/Roms/GBA' }, playlists: [] })
+    const raw = readFileSync(join(dir, 'rom-sync.yaml'), 'utf-8')
+    expect(raw).not.toContain('playlists')
+  })
+
   it('returns an error when the mount point does not exist', () => {
     const result = writeDeviceConfig('/nonexistent/path/xyz', {
       deviceName: 'Test',
-      platforms: { gba: '/Roms/GBA' }
+      platforms: { gba: '/Roms/GBA' },
+      playlists: []
     })
     expect(result.error).not.toBeNull()
   })
 
   it('returns an error when deviceName is empty', () => {
-    const result = writeDeviceConfig(dir, { deviceName: '', platforms: { gba: '/Roms/GBA' } })
+    const result = writeDeviceConfig(dir, { deviceName: '', platforms: { gba: '/Roms/GBA' }, playlists: [] })
     expect(result.error).not.toBeNull()
   })
 })

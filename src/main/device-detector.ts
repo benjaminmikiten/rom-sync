@@ -40,7 +40,10 @@ export function readDeviceConfig(mountPoint: string): DeviceConfigResult {
   return {
     config: {
       deviceName: doc['device_name'],
-      platforms: doc['platforms'] as Record<string, string>
+      platforms: doc['platforms'] as Record<string, string>,
+      playlists: Array.isArray(doc['playlists'])
+        ? (doc['playlists'] as unknown[]).filter((s): s is string => typeof s === 'string')
+        : []
     },
     error: null
   }
@@ -55,10 +58,14 @@ export function writeDeviceConfig(
   }
   const configPath = join(mountPoint, 'rom-sync.yaml')
   try {
-    const content = yaml.dump({
+    const yamlDoc: Record<string, unknown> = {
       device_name: config.deviceName,
       platforms: config.platforms
-    })
+    }
+    if (config.playlists.length > 0) {
+      yamlDoc.playlists = config.playlists
+    }
+    const content = yaml.dump(yamlDoc)
     writeFileSync(configPath, content, 'utf-8')
     return { error: null }
   } catch (e: unknown) {
