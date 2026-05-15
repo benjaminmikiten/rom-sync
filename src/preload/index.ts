@@ -36,8 +36,8 @@ contextBridge.exposeInMainWorld('api', {
     ipcRenderer.invoke('playlists:create', name, platform, rawEntries),
 
   // Sync
-  previewSync: (mountPoint: string, stems: string[]) => ipcRenderer.invoke('sync:preview', mountPoint, stems),
-  executeSync: (mountPoint: string, stems: string[]) => ipcRenderer.invoke('sync:execute', mountPoint, stems),
+  previewSync: (mountPoint: string) => ipcRenderer.invoke('sync:preview', mountPoint),
+  executeSync: (mountPoint: string) => ipcRenderer.invoke('sync:execute', mountPoint),
   onSyncProgress: (cb: (p: unknown) => void) => {
     ipcRenderer.on('sync:progress', (_e, p) => cb(p))
     return () => ipcRenderer.removeAllListeners('sync:progress')

@@ -18,8 +18,8 @@ declare global {
       readDeviceConfig: (mountPoint: string) => Promise<{ config: DeviceConfig | null; error: string | null }>
       writeDeviceConfig: (mountPoint: string, config: DeviceConfig) => Promise<{ error: string | null }>
       listSubdirs: (path: string) => Promise<string[]>
-      previewSync: (mountPoint: string, stems: string[]) => Promise<SyncPreview>
-      executeSync: (mountPoint: string, stems: string[]) => Promise<SyncResult>
+      previewSync: (mountPoint: string) => Promise<SyncPreview>
+      executeSync: (mountPoint: string) => Promise<SyncResult>
       onSyncProgress: (cb: (p: SyncProgress) => void) => () => void
       openFolderPicker: () => Promise<string | null>
       cleanupDotfiles: () => Promise<{ removed: number }>
