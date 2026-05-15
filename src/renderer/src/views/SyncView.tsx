@@ -8,13 +8,11 @@ export function SyncView(): React.JSX.Element {
   const [volumes, setVolumes] = useState<MountedVolume[]>([])
   const [selectedVolume, setSelectedVolume] = useState<string>('')
   const [preview, setPreview] = useState<SyncPreview | null>(null)
+  const [previewError, setPreviewError] = useState<string | null>(null)
   const [previewLoading, setPreviewLoading] = useState(false)
   const [syncing, setSyncing] = useState(false)
   const [progress, setProgress] = useState<SyncProgressType | null>(null)
   const [result, setResult] = useState<SyncResult | null>(null)
-  // In a future task, playlist stems would come from device assignment config.
-  // For now, empty array produces a valid preview (shows all card files as to-delete).
-  const [playlistStems] = useState<string[]>([])
 
   useEffect(() => { api.listDevices().then(setVolumes) }, [])
   useEffect(() => { const unsub = api.onSyncProgress(setProgress as (p: unknown) => void); return unsub }, [])
@@ -23,8 +21,13 @@ export function SyncView(): React.JSX.Element {
     if (!selectedVolume) return
     setPreviewLoading(true)
     setPreview(null)
-    const p = await api.previewSync(selectedVolume, playlistStems)
-    setPreview(p)
+    setPreviewError(null)
+    const p = await api.previewSync(selectedVolume) as SyncPreview | { error: string }
+    if ('error' in p) {
+      setPreviewError(p.error)
+    } else {
+      setPreview(p)
+    }
     setPreviewLoading(false)
   }
 
@@ -33,7 +36,7 @@ export function SyncView(): React.JSX.Element {
     setSyncing(true)
     setResult(null)
     setProgress(null)
-    const r = await api.executeSync(selectedVolume, playlistStems)
+    const r = await api.executeSync(selectedVolume)
     setResult(r)
     setSyncing(false)
   }
@@ -48,7 +51,7 @@ export function SyncView(): React.JSX.Element {
         <label style={{ display: 'block', marginBottom: 6 }}>Target Device</label>
         <select
           value={selectedVolume}
-          onChange={(e) => { setSelectedVolume(e.target.value); setPreview(null) }}
+          onChange={(e) => { setSelectedVolume(e.target.value); setPreview(null); setPreviewError(null) }}
           style={{ padding: 8, background: '#2a2a2a', color: '#fff', border: '1px solid #444', borderRadius: 4 }}
         >
           <option value="">— Select a device —</option>
@@ -61,6 +64,12 @@ export function SyncView(): React.JSX.Element {
           {previewLoading ? 'Computing…' : 'Preview Sync'}
         </button>
       </div>
+
+      {previewError && (
+        <div style={{ padding: 12, background: '#f4433622', border: '1px solid #f44336', borderRadius: 6, marginBottom: 16, color: '#f44336' }}>
+          {previewError}
+        </div>
+      )}
 
       {preview && (
         <>
