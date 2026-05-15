@@ -13,6 +13,7 @@ export function SyncView(): React.JSX.Element {
   const [syncing, setSyncing] = useState(false)
   const [progress, setProgress] = useState<SyncProgressType | null>(null)
   const [result, setResult] = useState<SyncResult | null>(null)
+  const [syncError, setSyncError] = useState<string | null>(null)
 
   useEffect(() => { api.listDevices().then(setVolumes) }, [])
   useEffect(() => { const unsub = api.onSyncProgress(setProgress as (p: unknown) => void); return unsub }, [])
@@ -35,9 +36,14 @@ export function SyncView(): React.JSX.Element {
     if (!selectedVolume || !preview) return
     setSyncing(true)
     setResult(null)
+    setSyncError(null)
     setProgress(null)
-    const r = await api.executeSync(selectedVolume)
-    setResult(r)
+    const r = await api.executeSync(selectedVolume) as SyncResult | { error: string }
+    if ('error' in r) {
+      setSyncError(r.error)
+    } else {
+      setResult(r)
+    }
     setSyncing(false)
   }
 
@@ -51,7 +57,7 @@ export function SyncView(): React.JSX.Element {
         <label style={{ display: 'block', marginBottom: 6 }}>Target Device</label>
         <select
           value={selectedVolume}
-          onChange={(e) => { setSelectedVolume(e.target.value); setPreview(null); setPreviewError(null) }}
+          onChange={(e) => { setSelectedVolume(e.target.value); setPreview(null); setPreviewError(null); setSyncError(null) }}
           style={{ padding: 8, background: '#2a2a2a', color: '#fff', border: '1px solid #444', borderRadius: 4 }}
         >
           <option value="">— Select a device —</option>
@@ -99,6 +105,12 @@ export function SyncView(): React.JSX.Element {
             <div style={{ color: '#f44336' }}>{result.errors.map((e, i) => <div key={i}>{e}</div>)}</div>
           )}
           <p style={{ fontSize: 12, color: '#888' }}>Log: {result.logPath}</p>
+        </div>
+      )}
+
+      {syncError && (
+        <div style={{ marginTop: 20, padding: 12, background: '#f4433622', border: '1px solid #f44336', borderRadius: 6, color: '#f44336' }}>
+          {syncError}
         </div>
       )}
     </div>
