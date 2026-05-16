@@ -51,6 +51,10 @@ export function DevicesView(): React.JSX.Element {
     setPlatformRows([{ id: nextRowId.current++, platform: '', path: null }])
     setCreateError(null)
     setPlaylistSaveError(null)
+    setImportPlatform(null)
+    setImportName('')
+    setImportResult(null)
+    setImporting(false)
     const plResults = await api.listPlaylists()
     setAvailablePlaylists(
       plResults
