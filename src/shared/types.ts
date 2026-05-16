@@ -30,9 +30,9 @@ export interface PlaylistEntry {
 export interface Playlist {
   stem: string
   name: string
-  platform: string | null   // null = cross-platform
+  platform: string[] | null   // null = cross-platform; array = one or more platform codes
   entries: PlaylistEntry[]
-  includes: string[]        // stems of other playlists
+  includes: string[]           // stems of other playlists
   filePath: string
 }
 
