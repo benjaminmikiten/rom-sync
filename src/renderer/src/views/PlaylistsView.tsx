@@ -129,7 +129,7 @@ export function PlaylistsView(): React.JSX.Element {
               <span style={{ fontWeight: 600 }}>{pl?.name ?? `(invalid playlist ${i})`}</span>
               {pl && (
                 <span style={{ marginLeft: 12, fontSize: 12, color: '#888' }}>
-                  {pl.platform ? pl.platform.toUpperCase() : 'cross-platform'} · {pl.entries.length} entries
+                  {pl.platform ? pl.platform.map((p) => p.toUpperCase()).join(' / ') : 'cross-platform'} · {pl.entries.length} entries
                 </span>
               )}
             </div>
