@@ -25,6 +25,7 @@ declare global {
       cleanupDotfiles: () => Promise<{ removed: number }>
       openPlaylistsFolder: () => Promise<void>
       createPlaylist: (name: string, platform: string, rawEntries: string) => Promise<{ stem: string }>
+      importPlaylistFromDevice: (mountPoint: string, platform: string, name: string) => Promise<{ stem: string } | { error: string }>
     }
   }
 }

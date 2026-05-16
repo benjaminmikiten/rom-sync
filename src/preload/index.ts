@@ -34,6 +34,8 @@ contextBridge.exposeInMainWorld('api', {
   openPlaylistsFolder: () => ipcRenderer.invoke('playlists:open-folder'),
   createPlaylist: (name: string, platform: string, rawEntries: string) =>
     ipcRenderer.invoke('playlists:create', name, platform, rawEntries),
+  importPlaylistFromDevice: (mountPoint: string, platform: string, name: string) =>
+    ipcRenderer.invoke('playlists:import-from-device', mountPoint, platform, name),
 
   // Sync
   previewSync: (mountPoint: string) => ipcRenderer.invoke('sync:preview', mountPoint),
