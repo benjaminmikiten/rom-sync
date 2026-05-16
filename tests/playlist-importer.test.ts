@@ -98,4 +98,14 @@ describe('importPlaylistFromDeviceFolder', () => {
     const entryLines = yaml.split('\n').filter((l) => l.startsWith('  - '))
     expect(entryLines).toHaveLength(1)
   })
+
+  it('handles an empty folder gracefully', () => {
+    const result = importPlaylistFromDeviceFolder(mountPoint, 'nds', 'DS Games', playlistsDir)
+    expect(result).toEqual({ stem: 'ds-games' })
+
+    const yaml = readFileSync(join(playlistsDir, 'ds-games.yaml'), 'utf-8')
+    expect(yaml).toContain('name: DS Games')
+    expect(yaml).toContain('platform: nds')
+    expect(yaml).toContain('entries:')
+  })
 })

@@ -1,5 +1,6 @@
 import { existsSync, readdirSync, statSync, writeFileSync } from 'fs'
 import { join } from 'path'
+import yaml from 'js-yaml'
 import { readDeviceConfig } from './device-detector'
 import { normalizeTitle } from './normalizer'
 
@@ -37,6 +38,7 @@ export function importPlaylistFromDeviceFolder(
   const entries: string[] = []
   for (const filename of files) {
     const title = normalizeTitle(filename)
+    if (!title) continue
     if (!seen.has(title)) {
       seen.add(title)
       entries.push(title)
@@ -44,13 +46,15 @@ export function importPlaylistFromDeviceFolder(
   }
 
   const stem = trimmedName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+  if (!stem) return { error: 'Name must contain at least one letter or number' }
+
   const yamlPath = join(playlistsDir, `${stem}.yaml`)
   if (existsSync(yamlPath)) {
     return { error: 'A playlist with that name already exists' }
   }
 
   const lines = [
-    `name: ${trimmedName}`,
+    `name: ${yaml.dump(trimmedName).trimEnd()}`,
     `platform: ${platform}`,
     'entries:',
     ...entries.map((e) => `  - ${e}`)
