@@ -1,4 +1,4 @@
-import { existsSync, readdirSync, statSync, writeFileSync } from 'fs'
+import { existsSync, mkdirSync, readdirSync, statSync, writeFileSync } from 'fs'
 import { join } from 'path'
 import yaml from 'js-yaml'
 import { readDeviceConfig } from './device-detector'
@@ -59,6 +59,7 @@ export function importPlaylistFromDeviceFolder(
     'entries:',
     ...entries.map((e) => `  - ${e}`)
   ]
+  mkdirSync(playlistsDir, { recursive: true })
   writeFileSync(yamlPath, lines.join('\n') + '\n')
 
   return { stem }
