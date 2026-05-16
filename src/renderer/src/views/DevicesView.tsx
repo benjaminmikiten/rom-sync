@@ -168,6 +168,7 @@ export function DevicesView(): React.JSX.Element {
     )
     setImportResult(result)
     setImporting(false)
+    if ('stem' in result) setImportPlatform(null)
   }
 
   const canCreate =
