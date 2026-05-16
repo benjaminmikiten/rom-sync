@@ -35,6 +35,10 @@ export function DevicesView(): React.JSX.Element {
   const [creating, setCreating] = useState(false)
   const [availablePlaylists, setAvailablePlaylists] = useState<Array<{ stem: string; name: string }>>([])
   const [playlistSaveError, setPlaylistSaveError] = useState<string | null>(null)
+  const [importPlatform, setImportPlatform] = useState<string | null>(null)
+  const [importName, setImportName] = useState('')
+  const [importResult, setImportResult] = useState<{ stem: string } | { error: string } | null>(null)
+  const [importing, setImporting] = useState(false)
 
   useEffect(() => { api.listDevices().then(setVolumes) }, [])
 
@@ -141,6 +145,25 @@ export function DevicesView(): React.JSX.Element {
     setSelected((prev) =>
       prev ? { ...prev, config: prev.config ? { ...prev.config, playlists: updated } : null } : null
     )
+  }
+
+  function handleOpenImport(platform: string): void {
+    setImportPlatform(platform)
+    setImportName(platform.toUpperCase())
+    setImportResult(null)
+  }
+
+  async function handleImport(): Promise<void> {
+    if (!selected?.config || !importPlatform || !importName.trim()) return
+    setImporting(true)
+    setImportResult(null)
+    const result = await api.importPlaylistFromDevice(
+      selected.volume.mountPoint,
+      importPlatform,
+      importName
+    )
+    setImportResult(result)
+    setImporting(false)
   }
 
   const canCreate =
@@ -285,15 +308,66 @@ export function DevicesView(): React.JSX.Element {
               <thead>
                 <tr style={{ color: '#888', textAlign: 'left' }}>
                   <th style={{ padding: '4px 16px 4px 0' }}>Platform</th>
-                  <th>Path on Card</th>
+                  <th style={{ padding: '4px 16px 4px 0' }}>Path on Card</th>
+                  <th></th>
                 </tr>
               </thead>
               <tbody>
                 {Object.entries(selected.config.platforms).map(([platform, path]) => (
-                  <tr key={platform}>
-                    <td style={{ padding: '4px 16px 4px 0', fontWeight: 600 }}>{platform}</td>
-                    <td style={{ color: '#aaa' }}>{path}</td>
-                  </tr>
+                  <React.Fragment key={platform}>
+                    <tr>
+                      <td style={{ padding: '4px 16px 4px 0', fontWeight: 600 }}>{platform}</td>
+                      <td style={{ padding: '4px 16px 4px 0', color: '#aaa' }}>{path}</td>
+                      <td>
+                        <button
+                          onClick={() =>
+                            importPlatform === platform
+                              ? setImportPlatform(null)
+                              : handleOpenImport(platform)
+                          }
+                          style={{ padding: '3px 10px', background: '#2a2a2a', color: '#aaa', border: '1px solid #444', borderRadius: 4, cursor: 'pointer', fontSize: 12 }}
+                        >
+                          {importPlatform === platform ? 'Cancel' : 'Import as playlist'}
+                        </button>
+                      </td>
+                    </tr>
+                    {importPlatform === platform && (
+                      <tr>
+                        <td colSpan={3} style={{ paddingBottom: 12 }}>
+                          <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 8 }}>
+                            <input
+                              value={importName}
+                              onChange={(e) => setImportName(e.target.value)}
+                              placeholder="Playlist name"
+                              style={{ padding: '6px 8px', background: '#2a2a2a', color: '#fff', border: '1px solid #444', borderRadius: 4, fontSize: 13, width: 200 }}
+                            />
+                            <button
+                              onClick={handleImport}
+                              disabled={importing || !importName.trim()}
+                              style={{
+                                padding: '6px 14px',
+                                background: importing || !importName.trim() ? '#2a2a2a' : '#4a9eff',
+                                color: importing || !importName.trim() ? '#555' : '#fff',
+                                border: 'none', borderRadius: 4,
+                                cursor: importing || !importName.trim() ? 'default' : 'pointer',
+                                fontSize: 13
+                              }}
+                            >
+                              {importing ? 'Creating…' : 'Create'}
+                            </button>
+                          </div>
+                          {importResult && 'error' in importResult && (
+                            <div style={{ color: '#f44336', fontSize: 12, marginTop: 6 }}>{importResult.error}</div>
+                          )}
+                          {importResult && 'stem' in importResult && (
+                            <div style={{ color: '#4caf50', fontSize: 12, marginTop: 6 }}>
+                              Playlist &lsquo;{importResult.stem}&rsquo; created — assign it to this device in the Playlists section below.
+                            </div>
+                          )}
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
                 ))}
               </tbody>
             </table>
