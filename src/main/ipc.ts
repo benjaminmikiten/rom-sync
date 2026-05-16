@@ -10,6 +10,7 @@ import { matchEntries } from './matcher'
 import { listMountedVolumes, readDeviceConfig, writeDeviceConfig, listSubdirs } from './device-detector'
 import { computeSyncPreview } from './sync-previewer'
 import { executeSyncPlan } from './sync-executor'
+import { importPlaylistFromDeviceFolder } from './playlist-importer'
 import { queryRomsByPlatform, queryAllRoms } from './db'
 import type { AppConfig, Playlist, MatchResult } from '@shared/types'
 import { watch } from 'chokidar'
@@ -159,6 +160,10 @@ export function registerIpcHandlers(db: Database, mainWindow: BrowserWindow): vo
     writeFileSync(join(dir, `${stem}.yaml`), lines.join('\n') + '\n')
     return { stem }
   })
+
+  ipcMain.handle('playlists:import-from-device', (_e, mountPoint: string, platform: string, name: string) =>
+    importPlaylistFromDeviceFolder(mountPoint, platform, name, playlistsDir())
+  )
 
   // Watch playlists dir for changes
   const watcher = watch(playlistsDir(), { ignoreInitial: true })
