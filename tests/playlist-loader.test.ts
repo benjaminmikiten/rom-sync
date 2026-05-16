@@ -112,7 +112,7 @@ describe('loadAllPlaylists', () => {
 })
 
 describe('loadPlaylist — platform aliases', () => {
-  it('expands entries for each platform in a YAML list', () => {
+  it('stores platform array on each entry for multi-platform playlists', () => {
     const path = write('snes.yaml', `
 name: SNES Best
 platform:
@@ -125,13 +125,9 @@ entries:
     const result = loadPlaylist(path)
     expect(result.valid).toBe(true)
     expect(result.playlist!.platform).toEqual(['snes', 'sfc'])
-    expect(result.playlist!.entries).toHaveLength(4)
-    const snesEntries = result.playlist!.entries.filter((e) => e.platform === 'snes')
-    const sfcEntries = result.playlist!.entries.filter((e) => e.platform === 'sfc')
-    expect(snesEntries).toHaveLength(2)
-    expect(sfcEntries).toHaveLength(2)
-    expect(snesEntries.map((e) => e.raw)).toContain('Super Mario World')
-    expect(sfcEntries.map((e) => e.raw)).toContain('Chrono Trigger')
+    expect(result.playlist!.entries).toHaveLength(2)
+    expect(result.playlist!.entries[0]).toEqual({ raw: 'Super Mario World', platform: ['snes', 'sfc'] })
+    expect(result.playlist!.entries[1]).toEqual({ raw: 'Chrono Trigger', platform: ['snes', 'sfc'] })
   })
 
   it('treats a single-element platform list identically to a platform string', () => {

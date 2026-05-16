@@ -45,14 +45,14 @@ export function loadPlaylist(filePath: string): LoadResult {
   const entries: PlaylistEntry[] = []
 
   if (platforms) {
-    // single-platform or alias: entries is a flat string list, expanded per platform
+    // single-platform or alias: entries is a flat string list
     if (!Array.isArray(doc['entries'])) {
       issues.push({ severity: 'error', message: 'entries must be a list for single-platform playlists' })
     } else {
-      for (const platformCode of platforms) {
-        for (const e of doc['entries'] as unknown[]) {
-          if (typeof e === 'string') entries.push({ raw: e, platform: platformCode })
-        }
+      // platform is a string if single-platform, string[] if aliases
+      const entryPlatform: string | string[] = platforms.length === 1 ? platforms[0] : platforms
+      for (const e of doc['entries'] as unknown[]) {
+        if (typeof e === 'string') entries.push({ raw: e, platform: entryPlatform })
       }
     }
   } else {

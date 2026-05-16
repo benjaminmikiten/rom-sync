@@ -24,7 +24,7 @@ export interface ScanProgress {
 // --- Playlists ---
 export interface PlaylistEntry {
   raw: string          // original string from YAML
-  platform: string     // resolved platform
+  platform: string | string[]  // single platform code or list of platform codes to search
 }
 
 export interface Playlist {

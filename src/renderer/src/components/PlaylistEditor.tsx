@@ -41,7 +41,9 @@ export function PlaylistEditor({ stem, name, onClose }: Props): React.JSX.Elemen
             {matches.map((m, i) => (
               <tr key={i} style={{ borderTop: '1px solid #2a2a2a' }}>
                 <td style={{ padding: '4px 8px' }}>{m.entry.raw}</td>
-                <td style={{ padding: '4px 8px', color: '#888' }}>{m.entry.platform}</td>
+                <td style={{ padding: '4px 8px', color: '#888' }}>
+                  {Array.isArray(m.entry.platform) ? m.entry.platform.join(' / ') : m.entry.platform}
+                </td>
                 <td style={{ padding: '4px 8px' }}>
                   <span style={{
                     padding: '2px 8px', borderRadius: 3, fontSize: 11,
