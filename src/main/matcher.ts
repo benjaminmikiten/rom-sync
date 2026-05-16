@@ -4,6 +4,9 @@ import { queryRomsByPlatform } from './db'
 import { normalizeTitle } from './normalizer'
 import type { PlaylistEntry, MatchResult, MatchStatus } from '@shared/types'
 
+// When two platforms both produce the same quality match (e.g. two exact matches),
+// the first-encountered platform wins (Map insertion order). This is deterministic
+// for a given playlist but not user-configurable.
 function isBetterMatch(candidate: MatchResult, existing: MatchResult): boolean {
   const rank: Record<MatchStatus, number> = { exact: 2, fuzzy: 1, none: 0 }
   if (rank[candidate.status] > rank[existing.status]) return true
@@ -65,5 +68,5 @@ export function matchEntries(
     }
   }
 
-  return entries.map((e) => resultMap.get(e)!)
+  return entries.map((e) => resultMap.get(e) ?? { entry: e, status: 'none' as const, rom: null, score: null })
 }

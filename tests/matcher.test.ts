@@ -48,11 +48,10 @@ describe('matchEntries', () => {
 
 describe('matchEntries — multi-platform entries', () => {
   it('finds exact match in second platform when first has no match', () => {
-    // ActRaiser is in sfc but not snes (well, both exist, but let's use a title only in sfc)
-    // Use a title that only exists in sfc: 'actraiser' is in both; let's use a unique sfc-only title
-    // Instead seed a unique one for this test by checking: 'actraiser' is seeded in sfc above
-    // Entry with platform ['gba', 'sfc'] — only sfc has actraiser
-    const e = multiEntry('ActRaiser (Japan)', ['gba', 'sfc'])
+    // 'ActRaiser' normalizes to 'actraiser' exactly (no region tag, no punctuation).
+    // gba has no actraiser ROM; sfc does — so the matcher should skip gba and find
+    // an exact match in sfc.
+    const e = multiEntry('ActRaiser', ['gba', 'sfc'])
     const results = matchEntries(db, [e], 0.6)
     expect(results[0].status).toBe('exact')
     expect(results[0].rom?.platform).toBe('sfc')
