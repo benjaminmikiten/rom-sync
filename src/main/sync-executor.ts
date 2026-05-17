@@ -36,7 +36,7 @@ export async function executeSyncPlan(
   }
 
   // Delete phase — only runs after all copies succeed
-  for (const filePath of preview.toDelete) {
+  for (const { path: filePath } of preview.toDelete) {
     try {
       unlinkSync(filePath)
       deletedCount++

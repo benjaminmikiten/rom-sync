@@ -55,7 +55,7 @@ describe('executeSyncPlan', () => {
     writeFileSync(orphan, 'old')
     const preview: SyncPreview = {
       toCopy: [],
-      toDelete: [orphan],
+      toDelete: [{ platform: 'gba', path: orphan }],
       skipped: [],
       totalCopyBytes: 0,
       availableBytes: 1_000_000
@@ -72,7 +72,7 @@ describe('executeSyncPlan', () => {
     writeFileSync(orphan, 'old')
     const preview: SyncPreview = {
       toCopy: [resolved('Missing.zip')],
-      toDelete: [orphan],
+      toDelete: [{ platform: 'gba', path: orphan }],
       skipped: [],
       totalCopyBytes: 0,
       availableBytes: 1_000_000
