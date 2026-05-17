@@ -53,7 +53,7 @@ describe('computeSyncPreview', () => {
     const preview = computeSyncPreview([], deviceConfig, cardDir)
     expect(preview.toDelete).toHaveLength(1)
     expect(preview.toDelete[0].platform).toBe('gba')
-    expect(preview.toDelete[0].path).toContain('Orphan.zip')
+    expect(preview.toDelete[0].path).toBe(join(cardDir, 'games', 'gba', 'Orphan.zip'))
   })
 
   it('does not include file in toDelete if it is in the playlist', () => {
