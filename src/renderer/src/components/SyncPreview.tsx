@@ -11,8 +11,9 @@ function skipPlatform(s: SkippedEntry): string {
 function groupToDelete(items: { platform: string; path: string }[]): Map<string, string[]> {
   const map = new Map<string, string[]>()
   for (const { platform, path } of items) {
-    if (!map.has(platform)) map.set(platform, [])
-    map.get(platform)!.push(path.split('/').pop() ?? path)
+    const bucket = map.get(platform) ?? []
+    map.set(platform, bucket)
+    bucket.push(path.split('/').pop() ?? path)
   }
   return map
 }
@@ -21,8 +22,9 @@ function groupSkipped(items: SkippedEntry[]): Map<string, SkippedEntry[]> {
   const map = new Map<string, SkippedEntry[]>()
   for (const s of items) {
     const platform = skipPlatform(s)
-    if (!map.has(platform)) map.set(platform, [])
-    map.get(platform)!.push(s)
+    const bucket = map.get(platform) ?? []
+    map.set(platform, bucket)
+    bucket.push(s)
   }
   return map
 }
