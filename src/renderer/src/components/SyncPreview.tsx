@@ -1,11 +1,11 @@
 import React from 'react'
-import type { SyncPreview as SyncPreviewType, SkippedEntry } from '@shared/types'
+import type { SyncPreview as SyncPreviewType, SkippedEntry, SkipReason } from '@shared/types'
 import { StorageBar } from './StorageBar'
 
 function skipPlatform(s: SkippedEntry): string {
   if (s.reason === 'platform-not-mapped' && s.match.rom) return s.match.rom.platform
   const p = s.match.entry.platform
-  return Array.isArray(p) ? p[0] : p
+  return Array.isArray(p) ? (p[0] ?? 'unknown') : p
 }
 
 function groupToDelete(items: { platform: string; path: string }[]): Map<string, string[]> {
@@ -27,7 +27,7 @@ function groupSkipped(items: SkippedEntry[]): Map<string, SkippedEntry[]> {
   return map
 }
 
-const REASON_LABEL: Record<string, string> = {
+const REASON_LABEL: Record<SkipReason, string> = {
   'no-match': 'no library match',
   'platform-not-mapped': 'platform not on device'
 }
