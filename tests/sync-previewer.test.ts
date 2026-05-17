@@ -1,4 +1,3 @@
-// tests/sync-previewer.test.ts
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { computeSyncPreview } from '../src/main/sync-previewer'
 import type { MatchResult, DeviceConfig, Rom } from '../src/shared/types'
@@ -30,7 +29,8 @@ const noMatch = (): MatchResult => ({
 
 const deviceConfig: DeviceConfig = {
   deviceName: 'Test Card',
-  platforms: { gba: '/games/gba', snes: '/games/snes' }
+  platforms: { gba: '/games/gba', snes: '/games/snes' },
+  playlists: []
 }
 
 describe('computeSyncPreview', () => {
@@ -48,10 +48,12 @@ describe('computeSyncPreview', () => {
     expect(preview.toCopy).toHaveLength(0)
   })
 
-  it('adds extra files on card to toDelete', () => {
+  it('adds extra files on card to toDelete with their platform', () => {
     writeFileSync(join(cardDir, 'games', 'gba', 'Orphan.zip'), 'data')
     const preview = computeSyncPreview([], deviceConfig, cardDir)
-    expect(preview.toDelete.some((p) => p.endsWith('Orphan.zip'))).toBe(true)
+    expect(preview.toDelete).toHaveLength(1)
+    expect(preview.toDelete[0].platform).toBe('gba')
+    expect(preview.toDelete[0].path).toContain('Orphan.zip')
   })
 
   it('does not include file in toDelete if it is in the playlist', () => {
@@ -61,10 +63,22 @@ describe('computeSyncPreview', () => {
     expect(preview.toDelete).toHaveLength(0)
   })
 
-  it('adds unmatched entries to skipped', () => {
+  it('marks unmatched entries as skipped with reason no-match', () => {
     const matches = [noMatch()]
     const preview = computeSyncPreview(matches, deviceConfig, cardDir)
     expect(preview.skipped).toHaveLength(1)
+    expect(preview.skipped[0].reason).toBe('no-match')
+    expect(preview.skipped[0].match.entry.raw).toBe('Unknown Game')
+  })
+
+  it('marks matched ROM on unmapped platform as skipped with reason platform-not-mapped', () => {
+    // n64 is not in deviceConfig.platforms
+    const n64Rom = rom(2, 'n64', 'Mario64.z64')
+    const matches = [exactMatch(n64Rom)]
+    const preview = computeSyncPreview(matches, deviceConfig, cardDir)
+    expect(preview.skipped).toHaveLength(1)
+    expect(preview.skipped[0].reason).toBe('platform-not-mapped')
+    expect(preview.skipped[0].match.rom?.platform).toBe('n64')
   })
 
   it('sums totalCopyBytes from toCopy ROMs', () => {

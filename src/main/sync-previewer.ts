@@ -1,6 +1,6 @@
 import { existsSync, readdirSync } from 'fs'
 import { join } from 'path'
-import type { MatchResult, DeviceConfig, SyncPreview, ResolvedRom } from '@shared/types'
+import type { MatchResult, DeviceConfig, SyncPreview, ResolvedRom, SkippedEntry } from '@shared/types'
 
 export function computeSyncPreview(
   matches: MatchResult[],
@@ -8,20 +8,20 @@ export function computeSyncPreview(
   cardMountPoint: string
 ): SyncPreview {
   const toCopy: ResolvedRom[] = []
-  const skipped: MatchResult[] = []
+  const skipped: SkippedEntry[] = []
 
   // Track which filenames belong in each destination dir
   const keepByDir = new Map<string, Set<string>>()
 
   for (const match of matches) {
     if (match.status === 'none' || !match.rom) {
-      skipped.push(match)
+      skipped.push({ match, reason: 'no-match' })
       continue
     }
 
     const platformRelPath = deviceConfig.platforms[match.rom.platform]
     if (!platformRelPath) {
-      skipped.push(match)
+      skipped.push({ match, reason: 'platform-not-mapped' })
       continue
     }
 
@@ -37,8 +37,8 @@ export function computeSyncPreview(
   }
 
   // Files in mapped platform dirs not in keep set → delete
-  const toDelete: string[] = []
-  for (const platformRelPath of Object.values(deviceConfig.platforms)) {
+  const toDelete: { platform: string; path: string }[] = []
+  for (const [platformCode, platformRelPath] of Object.entries(deviceConfig.platforms)) {
     const dir = join(cardMountPoint, platformRelPath)
     if (!existsSync(dir)) continue
 
@@ -52,7 +52,7 @@ export function computeSyncPreview(
 
     for (const file of files) {
       if (!keepSet.has(file)) {
-        toDelete.push(join(dir, file))
+        toDelete.push({ platform: platformCode, path: join(dir, file) })
       }
     }
   }
