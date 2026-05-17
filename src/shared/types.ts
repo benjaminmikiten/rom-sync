@@ -60,6 +60,13 @@ export interface MatchResult {
   score: number | null     // fuse score when fuzzy
 }
 
+export type SkipReason = 'no-match' | 'platform-not-mapped'
+
+export interface SkippedEntry {
+  match: MatchResult
+  reason: SkipReason
+}
+
 // --- Devices ---
 export interface DeviceConfig {
   deviceName: string
@@ -77,8 +84,8 @@ export interface MountedVolume {
 // --- Sync ---
 export interface SyncPreview {
   toCopy: ResolvedRom[]
-  toDelete: string[]         // absolute paths on SD card
-  skipped: MatchResult[]
+  toDelete: { platform: string; path: string }[]   // absolute paths on SD card with platform
+  skipped: SkippedEntry[]
   totalCopyBytes: number
   availableBytes: number
 }
