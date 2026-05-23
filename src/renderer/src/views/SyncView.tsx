@@ -79,7 +79,7 @@ export function SyncView(): React.JSX.Element {
 
       {preview && (
         <>
-          <SyncPreviewPanel preview={preview} />
+          <SyncPreviewPanel preview={preview} onRescueComplete={handlePreview} />
           <button
             onClick={handleSync} disabled={syncing || storageOverflow}
             style={{
