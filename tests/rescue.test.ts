@@ -3,6 +3,7 @@ import { copyFilesFromDevice, addEntriesToPlaylist, createPlaylistFromFilenames 
 import { mkdtempSync, writeFileSync, existsSync, readFileSync, mkdirSync, rmSync } from 'fs'
 import { tmpdir } from 'os'
 import { join } from 'path'
+import yaml from 'js-yaml'
 
 let srcDir: string
 let destDir: string
@@ -105,6 +106,20 @@ describe('addEntriesToPlaylist', () => {
     expect(content).toContain('mario kart')
     expect(content).toContain('kirby')
   })
+
+  it('returns error when entries field is not a flat string list', () => {
+    // Cross-platform playlist: entries is an object, not an array
+    writeFileSync(join(playlistsDir, 'cross.yaml'), [
+      'name: Cross Platform',
+      'entries:',
+      '  gba:',
+      '    - pokemon ruby'
+    ].join('\n'))
+
+    const result = addEntriesToPlaylist(playlistsDir, 'cross', ['Game.gba'])
+    expect(result.error).toBeTruthy()
+    expect(result.error).toContain('cross-platform')
+  })
 })
 
 describe('createPlaylistFromFilenames', () => {
@@ -146,5 +161,14 @@ describe('createPlaylistFromFilenames', () => {
     writeFileSync(join(playlistsDir, 'gba-finds.yaml'), 'existing')
     const result = createPlaylistFromFilenames(playlistsDir, 'GBA Finds', 'gba', ['Game.gba'])
     expect(result).toHaveProperty('error')
+  })
+
+  it('handles playlist names containing colons', () => {
+    const result = createPlaylistFromFilenames(playlistsDir, 'Pokemon: Gen 1', 'gba', ['Game.gba'])
+    expect(result).toEqual({ stem: 'pokemon-gen-1' })
+    // Must be valid YAML (re-parseable)
+    const content = readFileSync(join(playlistsDir, 'pokemon-gen-1.yaml'), 'utf-8')
+    const parsed = yaml.load(content) as Record<string, unknown>
+    expect(parsed['name']).toBe('Pokemon: Gen 1')
   })
 })

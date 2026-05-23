@@ -38,9 +38,14 @@ export function addEntriesToPlaylist(
   if (!raw || typeof raw !== 'object') return { error: 'Playlist file is empty or invalid' }
 
   const doc = raw as Record<string, unknown>
-  const existing: string[] = Array.isArray(doc['entries'])
-    ? (doc['entries'] as unknown[]).filter((e): e is string => typeof e === 'string')
-    : []
+  const rawEntries = doc['entries']
+  const isFlatStringList =
+    rawEntries == null ||
+    (Array.isArray(rawEntries) && rawEntries.every((e): e is string => typeof e === 'string'))
+  if (!isFlatStringList) {
+    return { error: 'Cannot add entries: playlist uses a cross-platform format not supported by rescue' }
+  }
+  const existing: string[] = Array.isArray(rawEntries) ? rawEntries : []
 
   const existingSet = new Set(existing)
   const normalized = filenames.map(f => normalizeTitle(f)).filter(Boolean)
@@ -70,7 +75,7 @@ export function createPlaylistFromFilenames(
 
   const entries = [...new Set(filenames.map(f => normalizeTitle(f)).filter(Boolean))]
   const lines = [
-    `name: ${trimmedName}`,
+    `name: ${yaml.dump(trimmedName).trimEnd()}`,
     platform ? `platform: ${platform}` : null,
     'entries:',
     ...entries.map(e => `  - ${e}`)
