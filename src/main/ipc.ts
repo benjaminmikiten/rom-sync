@@ -15,6 +15,7 @@ import { queryRomsByPlatform, queryAllRoms } from './db'
 import type { AppConfig, Playlist, MatchResult } from '@shared/types'
 import { watch } from 'chokidar'
 import type { BrowserWindow } from 'electron'
+import { copyFilesFromDevice, addEntriesToPlaylist, createPlaylistFromFilenames } from './rescue'
 
 const playlistsDir = (): string => join(app.getPath('userData'), 'playlists')
 const logsDir = (): string => join(app.getPath('userData'), 'logs')
@@ -111,6 +112,18 @@ export function registerIpcHandlers(db: Database, mainWindow: BrowserWindow): vo
       mainWindow.webContents.send('sync:progress', progress)
     })
   })
+
+  ipcMain.handle('sync:copy-from-device', (_e, pairs: { src: string; dest: string }[]) =>
+    copyFilesFromDevice(pairs)
+  )
+
+  ipcMain.handle('playlists:add-entries', (_e, stem: string, filenames: string[]) =>
+    addEntriesToPlaylist(playlistsDir(), stem, filenames)
+  )
+
+  ipcMain.handle('playlists:create-from-filenames', (_e, name: string, platform: string, filenames: string[]) =>
+    createPlaylistFromFilenames(playlistsDir(), name, platform, filenames)
+  )
 
   // Utilities
   ipcMain.handle('dialog:open-folder', async () => {
