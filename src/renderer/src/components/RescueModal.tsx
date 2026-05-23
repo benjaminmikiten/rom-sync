@@ -49,7 +49,7 @@ export function RescueModal({ items, onClose, onComplete }: Props): React.JSX.El
     api.listPlaylists().then(results => {
       setPlaylists(results.filter(r => r.playlist !== null).map(r => r.playlist!))
     })
-  }, [])
+  }, [items])
 
   const platforms = [...new Set(items.map(i => i.platform))]
   const inferredPlatform = platforms.length === 1 ? platforms[0] : ''
