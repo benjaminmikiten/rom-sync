@@ -112,3 +112,9 @@ export interface SyncResult {
   errors: string[]
   logPath: string
 }
+
+export interface RescueCopyProgress {
+  copied: number
+  total: number
+  currentFile: string
+}

@@ -2,19 +2,25 @@ import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from
 import { dirname, join } from 'path'
 import yaml from 'js-yaml'
 import { normalizeTitle } from './normalizer'
+import { RescueCopyProgress } from '../shared/types'
 
 export function copyFilesFromDevice(
-  pairs: { src: string; dest: string }[]
+  pairs: { src: string; dest: string }[],
+  onProgress?: (progress: RescueCopyProgress) => void
 ): { copied: number; errors: string[] } {
   const errors: string[] = []
   let copied = 0
+  const total = pairs.length
   for (const { src, dest } of pairs) {
+    const currentFile = src.split('/').pop() ?? src
     try {
       mkdirSync(dirname(dest), { recursive: true })
       copyFileSync(src, dest)
       copied++
+      onProgress?.({ copied, total, currentFile })
     } catch (e: unknown) {
       errors.push(`Failed to copy ${src}: ${e instanceof Error ? e.message : String(e)}`)
+      onProgress?.({ copied, total, currentFile })
     }
   }
   return { copied, errors }

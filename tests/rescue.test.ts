@@ -54,6 +54,38 @@ describe('copyFilesFromDevice', () => {
     expect(result.copied).toBe(0)
     expect(result.errors).toHaveLength(0)
   })
+
+  it('calls onProgress after each successful copy', () => {
+    writeFileSync(join(srcDir, 'A.gba'), 'a')
+    writeFileSync(join(srcDir, 'B.gba'), 'b')
+    const progress: { copied: number; total: number; currentFile: string }[] = []
+    copyFilesFromDevice([
+      { src: join(srcDir, 'A.gba'), dest: join(destDir, 'A.gba') },
+      { src: join(srcDir, 'B.gba'), dest: join(destDir, 'B.gba') }
+    ], (p) => progress.push(p))
+    expect(progress).toHaveLength(2)
+    expect(progress[0]).toEqual({ copied: 1, total: 2, currentFile: 'A.gba' })
+    expect(progress[1]).toEqual({ copied: 2, total: 2, currentFile: 'B.gba' })
+  })
+
+  it('calls onProgress with current filename on error', () => {
+    writeFileSync(join(srcDir, 'Good.gba'), 'content')
+    const progress: { copied: number; total: number; currentFile: string }[] = []
+    copyFilesFromDevice([
+      { src: join(srcDir, 'Missing.gba'), dest: join(destDir, 'Missing.gba') },
+      { src: join(srcDir, 'Good.gba'), dest: join(destDir, 'Good.gba') }
+    ], (p) => progress.push(p))
+    expect(progress).toHaveLength(2)
+    expect(progress[0]).toMatchObject({ copied: 0, total: 2, currentFile: 'Missing.gba' })
+    expect(progress[1]).toMatchObject({ copied: 1, total: 2, currentFile: 'Good.gba' })
+  })
+
+  it('does not throw when onProgress is not provided', () => {
+    writeFileSync(join(srcDir, 'Game.gba'), 'content')
+    expect(() => copyFilesFromDevice([
+      { src: join(srcDir, 'Game.gba'), dest: join(destDir, 'Game.gba') }
+    ])).not.toThrow()
+  })
 })
 
 describe('addEntriesToPlaylist', () => {
