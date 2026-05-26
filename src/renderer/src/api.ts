@@ -26,6 +26,7 @@ declare global {
       openPlaylistsFolder: () => Promise<void>
       createPlaylist: (name: string, platform: string, rawEntries: string) => Promise<{ stem: string }>
       importPlaylistFromDevice: (mountPoint: string, platform: string, name: string) => Promise<{ stem: string } | { error: string }>
+      openPlaylistFile: (filePath: string) => Promise<void>
       copyFromDevice: (pairs: { src: string; dest: string }[]) => Promise<{ copied: number; errors: string[] }>
       addPlaylistEntries: (stem: string, filenames: string[]) => Promise<{ error: string | null }>
       createPlaylistFromFilenames: (name: string, platform: string, filenames: string[]) => Promise<{ stem: string } | { error: string }>

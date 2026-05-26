@@ -159,6 +159,8 @@ export function registerIpcHandlers(db: Database, mainWindow: BrowserWindow): vo
     shell.openPath(dir)
   })
 
+  ipcMain.handle('playlists:open-file', (_e, filePath: string) => shell.openPath(filePath))
+
   ipcMain.handle('playlists:create', (_e, name: string, platform: string, rawEntries: string) => {
     const stem = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
     const entries = rawEntries.split('\n').map((l) => l.trim()).filter(Boolean)
