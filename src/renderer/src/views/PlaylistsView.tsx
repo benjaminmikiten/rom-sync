@@ -38,7 +38,7 @@ export function PlaylistsView(): React.JSX.Element {
   }
 
   if (selected) {
-    return <PlaylistEditor stem={selected.stem} name={selected.name} onClose={() => setSelected(null)} />
+    return <PlaylistEditor stem={selected.stem} name={selected.name} filePath={selected.filePath} onClose={() => setSelected(null)} />
   }
 
   return (

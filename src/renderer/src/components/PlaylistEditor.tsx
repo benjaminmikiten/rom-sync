@@ -5,13 +5,14 @@ import type { MatchResult } from '@shared/types'
 interface Props {
   stem: string
   name: string
+  filePath: string
   onClose: () => void
 }
 
 const STATUS_COLOR: Record<string, string> = { exact: '#4caf50', fuzzy: '#ff9800', none: '#f44336' }
 const STATUS_LABEL: Record<string, string> = { exact: 'Exact', fuzzy: 'Fuzzy', none: 'Not found' }
 
-export function PlaylistEditor({ stem, name, onClose }: Props): React.JSX.Element {
+export function PlaylistEditor({ stem, name, filePath, onClose }: Props): React.JSX.Element {
   const [matches, setMatches] = useState<MatchResult[] | null>(null)
 
   useEffect(() => {
@@ -23,6 +24,12 @@ export function PlaylistEditor({ stem, name, onClose }: Props): React.JSX.Elemen
       <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 20 }}>
         <button onClick={onClose} style={{ background: 'none', color: '#aaa', border: 'none', cursor: 'pointer', fontSize: 18 }}>←</button>
         <h2 style={{ margin: 0 }}>{name}</h2>
+        <button
+          onClick={() => api.openPlaylistFile(filePath)}
+          style={{ marginLeft: 'auto', padding: '6px 14px', background: '#3a3a3a', color: '#ccc', border: '1px solid #555', borderRadius: 4, cursor: 'pointer', fontSize: 13 }}
+        >
+          Open in Editor
+        </button>
       </div>
 
       {!matches && <p>Loading matches…</p>}
