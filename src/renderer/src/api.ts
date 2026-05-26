@@ -1,6 +1,7 @@
 import type {
   AppConfig, Rom, ScanProgress, Playlist, ValidationIssue,
-  MatchResult, MountedVolume, DeviceConfig, SyncPreview, SyncProgress, SyncResult
+  MatchResult, MountedVolume, DeviceConfig, SyncPreview, SyncProgress, SyncResult,
+  RescueCopyProgress
 } from '@shared/types'
 
 declare global {
@@ -21,6 +22,7 @@ declare global {
       previewSync: (mountPoint: string) => Promise<SyncPreview | { error: string }>
       executeSync: (mountPoint: string) => Promise<SyncResult | { error: string }>
       onSyncProgress: (cb: (p: SyncProgress) => void) => () => void
+      onRescueCopyProgress: (cb: (p: RescueCopyProgress) => void) => () => void
       openFolderPicker: () => Promise<string | null>
       cleanupDotfiles: () => Promise<{ removed: number }>
       openPlaylistsFolder: () => Promise<void>

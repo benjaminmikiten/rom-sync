@@ -114,7 +114,9 @@ export function registerIpcHandlers(db: Database, mainWindow: BrowserWindow): vo
   })
 
   ipcMain.handle('sync:copy-from-device', (_e, pairs: { src: string; dest: string }[]) =>
-    copyFilesFromDevice(pairs)
+    copyFilesFromDevice(pairs, (progress) => {
+      mainWindow.webContents.send('rescue:copy-progress', progress)
+    })
   )
 
   ipcMain.handle('playlists:add-entries', (_e, stem: string, filenames: string[]) =>

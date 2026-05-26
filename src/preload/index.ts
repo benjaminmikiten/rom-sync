@@ -50,5 +50,9 @@ contextBridge.exposeInMainWorld('api', {
   onSyncProgress: (cb: (p: unknown) => void) => {
     ipcRenderer.on('sync:progress', (_e, p) => cb(p))
     return () => ipcRenderer.removeAllListeners('sync:progress')
+  },
+  onRescueCopyProgress: (cb: (p: unknown) => void) => {
+    ipcRenderer.on('rescue:copy-progress', (_e, p) => cb(p))
+    return () => ipcRenderer.removeAllListeners('rescue:copy-progress')
   }
 })
