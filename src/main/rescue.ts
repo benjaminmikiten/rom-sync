@@ -2,7 +2,7 @@ import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from
 import { dirname, join } from 'path'
 import yaml from 'js-yaml'
 import { normalizeTitle } from './normalizer'
-import { RescueCopyProgress } from '../shared/types'
+import type { RescueCopyProgress } from '../shared/types'
 
 export function copyFilesFromDevice(
   pairs: { src: string; dest: string }[],
