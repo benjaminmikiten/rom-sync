@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import type { AppConfig, Playlist } from '@shared/types'
+import type { AppConfig, Playlist, RescueCopyProgress } from '@shared/types'
 import { api } from '../api'
 
 interface Props {
@@ -24,6 +24,15 @@ function groupByPlatform(
   return map
 }
 
+function formatEta(startTime: number, copied: number, total: number): string {
+  const elapsed = Date.now() - startTime
+  const remaining = Math.round(((total - copied) * elapsed) / copied / 1000)
+  if (remaining < 60) return `~${remaining}s remaining`
+  const mins = Math.floor(remaining / 60)
+  const secs = remaining % 60
+  return `~${mins}m ${secs}s remaining`
+}
+
 export function RescueModal({ items, onClose, onComplete }: Props): React.JSX.Element {
   const [settings, setSettings] = useState<AppConfig | null>(null)
   const [playlists, setPlaylists] = useState<Playlist[]>([])
@@ -34,6 +43,8 @@ export function RescueModal({ items, onClose, onComplete }: Props): React.JSX.El
   const [newPlaylistName, setNewPlaylistName] = useState('')
   const [working, setWorking] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [copyProgress, setCopyProgress] = useState<RescueCopyProgress | null>(null)
+  const [copyStartTime, setCopyStartTime] = useState<number | null>(null)
 
   useEffect(() => {
     api.getSettings().then(s => {
@@ -51,6 +62,11 @@ export function RescueModal({ items, onClose, onComplete }: Props): React.JSX.El
     })
   }, [items])
 
+  useEffect(() => {
+    const unsub = api.onRescueCopyProgress(p => setCopyProgress(p))
+    return unsub
+  }, [])
+
   const platforms = [...new Set(items.map(i => i.platform))]
   const inferredPlatform = platforms.length === 1 ? platforms[0] : ''
   const groups = groupByPlatform(items)
@@ -63,6 +79,8 @@ export function RescueModal({ items, onClose, onComplete }: Props): React.JSX.El
   async function handleConfirm(): Promise<void> {
     setWorking(true)
     setError(null)
+    setCopyProgress(null)
+    setCopyStartTime(Date.now())
 
     if (copyEnabled && settings) {
       const pairs = items.map(item => ({
@@ -166,6 +184,34 @@ export function RescueModal({ items, onClose, onComplete }: Props): React.JSX.El
             </div>
           )}
         </div>
+
+        {working && copyEnabled && copyProgress && (
+          <div style={{ marginBottom: 16, padding: 12, background: '#1a1a1a', borderRadius: 6 }}>
+            <div style={{ height: 4, background: '#333', borderRadius: 2, overflow: 'hidden', marginBottom: 8 }}>
+              <div style={{
+                height: '100%', background: '#4a9eff', borderRadius: 2, transition: 'width 0.2s',
+                width: `${Math.round((copyProgress.copied / copyProgress.total) * 100)}%`
+              }} />
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 4 }}>
+              <span style={{ color: copyProgress.copied === copyProgress.total ? '#4caf50' : '#ccc' }}>
+                {copyProgress.copied === copyProgress.total
+                  ? 'Copy complete ✓'
+                  : `${copyProgress.copied} / ${copyProgress.total} files`}
+              </span>
+              {copyStartTime !== null && copyProgress.copied > 0 && copyProgress.copied < copyProgress.total && (
+                <span style={{ color: '#888' }}>
+                  {formatEta(copyStartTime, copyProgress.copied, copyProgress.total)}
+                </span>
+              )}
+            </div>
+            {copyProgress.copied < copyProgress.total && (
+              <div style={{ fontSize: 11, color: '#666', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {copyProgress.currentFile}
+              </div>
+            )}
+          </div>
+        )}
 
         {error && (
           <div style={{ padding: 10, background: '#f4433622', border: '1px solid #f44336', borderRadius: 4, marginBottom: 16, color: '#f44336', fontSize: 12, whiteSpace: 'pre-wrap' }}>
