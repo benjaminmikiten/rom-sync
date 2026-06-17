@@ -10,9 +10,15 @@
     "lint": "eslint .",
     "test": "vitest run",
     "test:watch": "vitest",
-    "postinstall": "echo 'no native modules to rebuild'"
+    "postinstall": "echo 'no native modules to rebuild'",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": "eslint --max-warnings 0"
   },
   "devDependencies": {
+    "@commitlint/cli": "^21.0.2",
+    "@commitlint/config-conventional": "^21.0.2",
     "@electron-toolkit/tsconfig": "^1.0.1",
     "@types/js-yaml": "^4.0.9",
     "@types/node": "^20.12.0",
@@ -24,6 +30,8 @@
     "electron-vite": "^2.1.0",
     "eslint": "^10.5.0",
     "eslint-plugin-react-hooks": "^7.1.1",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.0.7",
     "typescript": "^5.4.0",
     "typescript-eslint": "^8.61.1",
     "vite": "^5.2.0",
