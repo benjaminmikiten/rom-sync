@@ -7,31 +7,35 @@
     "dev": "electron-vite dev",
     "build": "electron-vite build",
     "preview": "electron-vite preview",
+    "lint": "eslint .",
     "test": "vitest run",
     "test:watch": "vitest",
     "postinstall": "echo 'no native modules to rebuild'"
   },
   "devDependencies": {
     "@electron-toolkit/tsconfig": "^1.0.1",
-    "@types/sql.js": "^1.4.9",
     "@types/js-yaml": "^4.0.9",
     "@types/node": "^20.12.0",
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
+    "@types/sql.js": "^1.4.9",
     "@vitejs/plugin-react": "^4.2.0",
     "electron": "^29.1.0",
     "electron-vite": "^2.1.0",
+    "eslint": "^10.5.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
     "typescript": "^5.4.0",
+    "typescript-eslint": "^8.61.1",
     "vite": "^5.2.0",
     "vitest": "^1.4.0"
   },
   "dependencies": {
-    "sql.js": "^1.12.0",
     "chokidar": "^3.6.0",
     "electron-store": "^8.2.0",
     "fuse.js": "^7.0.0",
     "js-yaml": "^4.1.0",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "sql.js": "^1.12.0"
   }
 }
