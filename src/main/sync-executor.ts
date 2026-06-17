@@ -2,11 +2,11 @@ import { copyFileSync, unlinkSync, mkdirSync, writeFileSync } from 'fs'
 import { dirname, join } from 'path'
 import type { SyncPreview, SyncResult, SyncProgress } from '@shared/types'
 
-export async function executeSyncPlan(
+export function executeSyncPlan(
   preview: SyncPreview,
   logDir: string,
   onProgress: (progress: SyncProgress) => void
-): Promise<SyncResult> {
+): SyncResult {
   const errors: string[] = []
   let copiedCount = 0
   let deletedCount = 0

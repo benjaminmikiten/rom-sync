@@ -49,7 +49,7 @@ export function SettingsView(): React.JSX.Element {
   const [promptCopied, setPromptCopied] = useState(false)
 
   useEffect(() => {
-    api.getSettings().then(setConfig)
+    void api.getSettings().then(setConfig)
   }, [])
 
   async function handleSave(): Promise<void> {
@@ -72,7 +72,7 @@ export function SettingsView(): React.JSX.Element {
   }
 
   function handleCopyPrompt(): void {
-    navigator.clipboard.writeText(PLAYLIST_PROMPT)
+    void navigator.clipboard.writeText(PLAYLIST_PROMPT)
     setPromptCopied(true)
     setTimeout(() => setPromptCopied(false), 2000)
   }
@@ -94,7 +94,7 @@ export function SettingsView(): React.JSX.Element {
             style={{ flex: 1, padding: 8, background: '#2a2a2a', color: '#fff', border: '1px solid #444', borderRadius: 4 }}
           />
           <button
-            onClick={handlePickFolder}
+            onClick={() => { void handlePickFolder() }}
             style={{ padding: '8px 14px', background: '#3a3a3a', color: '#ccc', border: '1px solid #555', borderRadius: 4, cursor: 'pointer', whiteSpace: 'nowrap' }}
           >
             Browse…
@@ -116,7 +116,7 @@ export function SettingsView(): React.JSX.Element {
       </div>
 
       <button
-        onClick={handleSave}
+        onClick={() => { void handleSave() }}
         style={{ padding: '8px 20px', background: '#4a9eff', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer', marginBottom: 40 }}
       >
         {saved ? 'Saved!' : 'Save'}
@@ -133,7 +133,7 @@ export function SettingsView(): React.JSX.Element {
           <code style={{ background: '#2a2a2a', padding: '1px 5px', borderRadius: 3 }}>.DS_Store</code> files from your ROM library directories.
         </div>
         <button
-          onClick={handleCleanup}
+          onClick={() => { void handleCleanup() }}
           style={{ padding: '7px 16px', background: '#3a3a3a', color: '#ccc', border: '1px solid #555', borderRadius: 4, cursor: 'pointer' }}
         >
           Run Cleanup

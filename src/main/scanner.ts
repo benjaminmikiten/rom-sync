@@ -5,11 +5,11 @@ import { upsertRom } from './db'
 import { normalizeTitle } from './normalizer'
 import type { ScanProgress } from '@shared/types'
 
-export async function scanLibrary(
+export function scanLibrary(
   db: Database,
   libraryPath: string,
   onProgress: (progress: ScanProgress) => void
-): Promise<void> {
+): void {
   const platforms = readdirSync(libraryPath).filter((entry) => {
     try {
       return statSync(join(libraryPath, entry)).isDirectory()

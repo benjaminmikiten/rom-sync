@@ -35,9 +35,9 @@ export function registerIpcHandlers(db: Database, mainWindow: BrowserWindow): vo
   ipcMain.handle('settings:set', (_e, patch: Partial<AppConfig>) => setConfig(patch))
 
   // Library
-  ipcMain.handle('library:scan', async () => {
+  ipcMain.handle('library:scan', () => {
     const { libraryPath } = getConfig()
-    await scanLibrary(db, libraryPath, (progress) => {
+    scanLibrary(db, libraryPath, (progress) => {
       mainWindow.webContents.send('library:scan-progress', progress)
     })
     return { done: true }
@@ -90,7 +90,7 @@ export function registerIpcHandlers(db: Database, mainWindow: BrowserWindow): vo
     return preview
   })
 
-  ipcMain.handle('sync:execute', async (_e, mountPoint: string) => {
+  ipcMain.handle('sync:execute', (_e, mountPoint: string) => {
     const { config: deviceConfig, error } = readDeviceConfig(mountPoint)
     if (!deviceConfig) return { error: error ?? 'Could not read device config' }
 
@@ -158,7 +158,7 @@ export function registerIpcHandlers(db: Database, mainWindow: BrowserWindow): vo
   ipcMain.handle('playlists:open-folder', () => {
     const dir = playlistsDir()
     mkdirSync(dir, { recursive: true })
-    shell.openPath(dir)
+    void shell.openPath(dir)
   })
 
   ipcMain.handle('playlists:open-file', async (_e, filePath: string) => shell.openPath(filePath))

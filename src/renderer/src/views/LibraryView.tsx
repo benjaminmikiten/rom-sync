@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react'
+import React, { useEffect, useState } from 'react'
 import { api } from '../api'
 import type { Rom } from '@shared/types'
 
@@ -12,13 +12,18 @@ export function LibraryView(): React.JSX.Element {
   const [lastScanned, setLastScanned] = useState<number | null>(null)
   const [sort, setSort] = useState<SortMode>('alpha')
 
-  const load = useCallback(async () => {
+  async function loadRoms(): Promise<void> {
     const all = await api.getRoms()
     setRoms(all)
     if (all.length > 0) setLastScanned(Math.max(...all.map((r) => r.scannedAt)))
-  }, [])
+  }
 
-  useEffect(() => { load() }, [load])
+  useEffect(() => {
+    void api.getRoms().then((all) => {
+      setRoms(all)
+      if (all.length > 0) setLastScanned(Math.max(...all.map((r) => r.scannedAt)))
+    })
+  }, [])
 
   useEffect(() => {
     const unsub = api.onScanProgress((p) => setScanCount(p.current))
@@ -29,7 +34,7 @@ export function LibraryView(): React.JSX.Element {
     setScanning(true)
     setScanCount(0)
     await api.scanLibrary()
-    await load()
+    await loadRoms()
     setScanning(false)
   }
 
@@ -57,7 +62,7 @@ export function LibraryView(): React.JSX.Element {
       <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 24, flexWrap: 'wrap' }}>
         <h2 style={{ margin: 0 }}>Library</h2>
         <button
-          onClick={handleScan} disabled={scanning}
+          onClick={() => { void handleScan() }} disabled={scanning}
           style={{ padding: '6px 16px', background: scanning ? '#444' : '#4a9eff', color: '#fff', border: 'none', borderRadius: 4, cursor: scanning ? 'default' : 'pointer' }}
         >
           {scanning ? `Scanning… (${scanCount})` : 'Rescan Library'}

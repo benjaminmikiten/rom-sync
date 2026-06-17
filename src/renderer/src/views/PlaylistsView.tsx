@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react'
+import React, { useEffect, useState } from 'react'
 import { api } from '../api'
 import { PlaylistEditor } from '../components/PlaylistEditor'
 import type { Playlist, ValidationIssue } from '@shared/types'
@@ -11,6 +11,10 @@ interface LoadedPlaylist {
 
 const PLATFORMS = ['gba', 'gbc', 'gb', 'snes', 'nes', 'nds', 'n64', 'gbc', 'genesis', 'psx', 'psp', 'msx', 'other']
 
+function loadPlaylists(): Promise<LoadedPlaylist[]> {
+  return api.listPlaylists()
+}
+
 export function PlaylistsView(): React.JSX.Element {
   const [playlists, setPlaylists] = useState<LoadedPlaylist[]>([])
   const [selected, setSelected] = useState<Playlist | null>(null)
@@ -20,13 +24,13 @@ export function PlaylistsView(): React.JSX.Element {
   const [newEntries, setNewEntries] = useState('')
   const [createError, setCreateError] = useState<string | null>(null)
 
-  const load = useCallback(async () => {
-    const results = await api.listPlaylists()
-    setPlaylists(results)
+  useEffect(() => {
+    void loadPlaylists().then(setPlaylists)
   }, [])
-
-  useEffect(() => { load() }, [load])
-  useEffect(() => { const unsub = api.onPlaylistsChanged(load); return unsub }, [load])
+  useEffect(() => {
+    const unsub = api.onPlaylistsChanged(() => { void loadPlaylists().then(setPlaylists) })
+    return unsub
+  }, [])
 
   async function handleCreate(): Promise<void> {
     if (!newName.trim()) { setCreateError('Name is required'); return }
@@ -52,7 +56,7 @@ export function PlaylistsView(): React.JSX.Element {
           {creating ? 'Cancel' : '+ New Playlist'}
         </button>
         <button
-          onClick={() => api.openPlaylistsFolder()}
+          onClick={() => { void api.openPlaylistsFolder() }}
           style={{ padding: '6px 14px', background: '#3a3a3a', color: '#ccc', border: '1px solid #555', borderRadius: 4, cursor: 'pointer', fontSize: 13 }}
         >
           Open Folder
@@ -97,7 +101,7 @@ export function PlaylistsView(): React.JSX.Element {
           </div>
           {createError && <div style={{ color: '#f44336', fontSize: 13, marginBottom: 8 }}>{createError}</div>}
           <button
-            onClick={handleCreate}
+            onClick={() => { void handleCreate() }}
             style={{ padding: '8px 20px', background: '#4a9eff', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer' }}
           >
             Create Playlist

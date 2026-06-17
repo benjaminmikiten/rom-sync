@@ -15,8 +15,8 @@ export function SyncView(): React.JSX.Element {
   const [result, setResult] = useState<SyncResult | null>(null)
   const [syncError, setSyncError] = useState<string | null>(null)
 
-  useEffect(() => { api.listDevices().then(setVolumes) }, [])
-  useEffect(() => { const unsub = api.onSyncProgress(setProgress as (p: unknown) => void); return unsub }, [])
+  useEffect(() => { void api.listDevices().then(setVolumes) }, [])
+  useEffect(() => { const unsub = api.onSyncProgress(setProgress); return unsub }, [])
 
   async function handlePreview(): Promise<void> {
     if (!selectedVolume) return
@@ -38,7 +38,7 @@ export function SyncView(): React.JSX.Element {
     setResult(null)
     setSyncError(null)
     setProgress(null)
-    const r = await api.executeSync(selectedVolume) as SyncResult | { error: string }
+    const r = await api.executeSync(selectedVolume)
     if ('error' in r) {
       setSyncError(r.error)
     } else {
@@ -64,7 +64,7 @@ export function SyncView(): React.JSX.Element {
           {volumes.map((v) => <option key={v.mountPoint} value={v.mountPoint}>{v.name}</option>)}
         </select>
         <button
-          onClick={handlePreview} disabled={!selectedVolume || previewLoading}
+          onClick={() => { void handlePreview() }} disabled={!selectedVolume || previewLoading}
           style={{ marginLeft: 12, padding: '8px 16px', background: '#4a9eff', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer' }}
         >
           {previewLoading ? 'Computing…' : 'Preview Sync'}
@@ -79,9 +79,9 @@ export function SyncView(): React.JSX.Element {
 
       {preview && (
         <>
-          <SyncPreviewPanel preview={preview} onRescueComplete={handlePreview} />
+          <SyncPreviewPanel preview={preview} onRescueComplete={() => { void handlePreview() }} />
           <button
-            onClick={handleSync} disabled={syncing || storageOverflow}
+            onClick={() => { void handleSync() }} disabled={syncing || storageOverflow}
             style={{
               padding: '10px 28px',
               background: storageOverflow ? '#555' : '#4caf50',

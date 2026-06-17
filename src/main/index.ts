@@ -19,13 +19,13 @@ async function createWindow(): Promise<void> {
   registerIpcHandlers(db, win)
 
   if (process.env['ELECTRON_RENDERER_URL']) {
-    win.loadURL(process.env['ELECTRON_RENDERER_URL'])
+    void win.loadURL(process.env['ELECTRON_RENDERER_URL'])
   } else {
-    win.loadFile(join(__dirname, '../renderer/index.html'))
+    void win.loadFile(join(__dirname, '../renderer/index.html'))
   }
 }
 
-app.whenReady().then(createWindow)
+void app.whenReady().then(createWindow)
 app.on('window-all-closed', () => {
   db?.close()
   app.quit()

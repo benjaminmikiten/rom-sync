@@ -47,7 +47,7 @@ export function RescueModal({ items, onClose, onComplete }: Props): React.JSX.El
   const [copyStartTime, setCopyStartTime] = useState<number | null>(null)
 
   useEffect(() => {
-    api.getSettings().then(s => {
+    void api.getSettings().then(s => {
       setSettings(s)
       const overrides: Record<string, string> = {}
       for (const item of items) {
@@ -57,7 +57,7 @@ export function RescueModal({ items, onClose, onComplete }: Props): React.JSX.El
       }
       setDestOverrides(overrides)
     })
-    api.listPlaylists().then(results => {
+    void api.listPlaylists().then(results => {
       setPlaylists(results.filter(r => r.playlist !== null).map(r => r.playlist!))
     })
   }, [items])
@@ -142,7 +142,7 @@ export function RescueModal({ items, onClose, onComplete }: Props): React.JSX.El
                       {destOverrides[platform] ?? `${settings.libraryPath}/${platform}`}
                     </span>
                     <button
-                      onClick={() => handleFolderPick(platform)}
+                      onClick={() => { void handleFolderPick(platform) }}
                       style={{ padding: '2px 8px', background: '#3a3a3a', color: '#ccc', border: '1px solid #555', borderRadius: 4, cursor: 'pointer', fontSize: 11, flexShrink: 0 }}
                     >
                       Change
@@ -228,7 +228,7 @@ export function RescueModal({ items, onClose, onComplete }: Props): React.JSX.El
             Cancel
           </button>
           <button
-            onClick={handleConfirm}
+            onClick={() => { void handleConfirm() }}
             disabled={!canConfirm}
             style={{ padding: '8px 16px', background: canConfirm ? '#4caf50' : '#555', color: '#fff', border: 'none', borderRadius: 4, cursor: canConfirm ? 'pointer' : 'default', fontWeight: 700 }}
           >

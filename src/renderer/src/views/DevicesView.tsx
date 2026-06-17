@@ -40,7 +40,7 @@ export function DevicesView(): React.JSX.Element {
   const [importResult, setImportResult] = useState<{ stem: string } | { error: string } | null>(null)
   const [importing, setImporting] = useState(false)
 
-  useEffect(() => { api.listDevices().then(setVolumes) }, [])
+  useEffect(() => { void api.listDevices().then(setVolumes) }, [])
 
   async function handleSelect(vol: MountedVolume): Promise<void> {
     setLoading(true)
@@ -221,13 +221,13 @@ export function DevicesView(): React.JSX.Element {
                   <>
                     <span style={{ fontSize: 13, color: '#aaa' }}>{toYamlPath(romsRoot, mountPoint)}</span>
                     <button
-                      onClick={handlePickRoot}
+                      onClick={() => { void handlePickRoot() }}
                       style={{ padding: '4px 10px', background: '#2a2a2a', color: '#aaa', border: '1px solid #444', borderRadius: 4, cursor: 'pointer', fontSize: 12 }}
                     >Change</button>
                   </>
                 ) : (
                   <button
-                    onClick={handlePickRoot}
+                    onClick={() => { void handlePickRoot() }}
                     style={{ padding: '7px 14px', background: '#3a3a3a', color: '#ccc', border: '1px solid #555', borderRadius: 4, cursor: 'pointer' }}
                   >Pick Folder…</button>
                 )}
@@ -236,7 +236,7 @@ export function DevicesView(): React.JSX.Element {
 
             <div style={{ marginBottom: 16 }}>
               <label style={{ display: 'block', marginBottom: 8, color: '#ccc', fontSize: 13 }}>Platforms</label>
-              {platformRows.map((row, i) => {
+              {platformRows.map((row) => {
                 const previewPath = row.path
                   ? toYamlPath(row.path, mountPoint)
                   : romsRoot && row.platform.trim()
@@ -262,7 +262,7 @@ export function DevicesView(): React.JSX.Element {
                       {previewPath ?? '(pick a folder)'}
                     </span>
                     <button
-                      onClick={() => handleChangeRowFolder(row.id)}
+                      onClick={() => { void handleChangeRowFolder(row.id) }}
                       style={{ padding: '4px 10px', background: '#2a2a2a', color: '#aaa', border: '1px solid #444', borderRadius: 4, cursor: 'pointer', fontSize: 12 }}
                     >
                       {row.path ? 'Change' : 'Pick…'}
@@ -285,7 +285,7 @@ export function DevicesView(): React.JSX.Element {
             </div>
 
             <button
-              onClick={handleCreate}
+              onClick={() => { void handleCreate() }}
               disabled={!canCreate || creating}
               style={{
                 padding: '8px 20px',
@@ -347,7 +347,7 @@ export function DevicesView(): React.JSX.Element {
                               style={{ padding: '6px 8px', background: '#2a2a2a', color: '#fff', border: '1px solid #444', borderRadius: 4, fontSize: 13, width: 200 }}
                             />
                             <button
-                              onClick={handleImport}
+                              onClick={() => { void handleImport() }}
                               disabled={importing || !importName.trim()}
                               style={{
                                 padding: '6px 14px',
@@ -387,7 +387,7 @@ export function DevicesView(): React.JSX.Element {
                     <input
                       type="checkbox"
                       checked={selected.config!.playlists.includes(stem)}
-                      onChange={() => handleTogglePlaylist(stem)}
+                      onChange={() => { void handleTogglePlaylist(stem) }}
                     />
                     <span style={{ fontSize: 13 }}>{name}</span>
                   </label>
@@ -408,7 +408,7 @@ export function DevicesView(): React.JSX.Element {
       <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 24 }}>
         <h2 style={{ margin: 0 }}>Devices</h2>
         <button
-          onClick={() => api.listDevices().then(setVolumes)}
+          onClick={() => { void api.listDevices().then(setVolumes) }}
           style={{ padding: '6px 16px', background: '#4a9eff', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer' }}
         >
           Refresh
@@ -420,7 +420,7 @@ export function DevicesView(): React.JSX.Element {
       {volumes.map((vol) => (
         <div
           key={vol.mountPoint}
-          onClick={() => handleSelect(vol)}
+          onClick={() => { void handleSelect(vol) }}
           style={{ padding: '12px 16px', marginBottom: 8, background: '#1e1e1e', borderRadius: 6, cursor: 'pointer', border: '1px solid #2a2a2a' }}
         >
           <span style={{ fontWeight: 600 }}>{vol.name}</span>
